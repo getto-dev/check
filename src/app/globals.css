@@ -1,0 +1,396 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+
+@custom-variant dark (&:is(.dark *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: var(--font-inter);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar: var(--sidebar);
+  --color-chart-5: var(--chart-5);
+  --color-chart-4: var(--chart-4);
+  --color-chart-3: var(--chart-3);
+  --color-chart-2: var(--chart-2);
+  --color-chart-1: var(--chart-1);
+  --color-ring: var(--ring);
+  --color-input: var(--input);
+  --color-border: var(--border);
+  --color-destructive: var(--destructive);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-accent: var(--accent);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-muted: var(--muted);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-secondary: var(--secondary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary: var(--primary);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-popover: var(--popover);
+  --color-card-foreground: var(--card-foreground);
+  --color-card: var(--card);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+}
+
+/* ==================== Переменные темы ==================== */
+:root {
+  --radius: 1rem;
+  --background: oklch(0.98 0.002 240);
+  --foreground: oklch(0.145 0.01 240);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.145 0.01 240);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.145 0.01 240);
+  --primary: oklch(0.5 0.18 270);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.97 0.005 240);
+  --secondary-foreground: oklch(0.205 0.01 240);
+  --muted: oklch(0.95 0.005 240);
+  --muted-foreground: oklch(0.5 0.01 240);
+  --accent: oklch(0.95 0.01 270);
+  --accent-foreground: oklch(0.205 0.01 240);
+  --destructive: oklch(0.577 0.245 27.325);
+  --border: oklch(0.9 0.01 240);
+  --input: oklch(0.9 0.01 240);
+  --ring: oklch(0.5 0.18 270);
+  --chart-1: oklch(0.55 0.2 250);
+  --chart-2: oklch(0.6 0.15 200);
+  --chart-3: oklch(0.65 0.15 150);
+  --chart-4: oklch(0.7 0.15 100);
+  --chart-5: oklch(0.6 0.2 300);
+  --sidebar: oklch(0.98 0.002 240);
+  --sidebar-foreground: oklch(0.145 0.01 240);
+  --sidebar-primary: oklch(0.5 0.18 270);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.95 0.01 270);
+  --sidebar-accent-foreground: oklch(0.205 0.01 240);
+  --sidebar-border: oklch(0.9 0.01 240);
+  --sidebar-ring: oklch(0.5 0.18 270);
+  --gradient-start: oklch(0.55 0.2 270);
+  --gradient-end: oklch(0.55 0.18 250);
+}
+
+.dark {
+  --background: oklch(0.12 0.02 250);
+  --foreground: oklch(0.95 0.005 240);
+  --card: oklch(0.18 0.02 250);
+  --card-foreground: oklch(0.95 0.005 240);
+  --popover: oklch(0.18 0.02 250);
+  --popover-foreground: oklch(0.95 0.005 240);
+  --primary: oklch(0.7 0.18 270);
+  --primary-foreground: oklch(1 0 0);
+  --secondary: oklch(0.22 0.02 250);
+  --secondary-foreground: oklch(0.95 0.005 240);
+  --muted: oklch(0.22 0.02 250);
+  --muted-foreground: oklch(0.65 0.01 240);
+  --accent: oklch(0.25 0.03 270);
+  --accent-foreground: oklch(0.95 0.005 240);
+  --destructive: oklch(0.704 0.191 22.216);
+  --border: oklch(0.3 0.02 250);
+  --input: oklch(0.25 0.02 250);
+  --ring: oklch(0.7 0.18 270);
+  --chart-1: oklch(0.65 0.2 250);
+  --chart-2: oklch(0.7 0.15 200);
+  --chart-3: oklch(0.75 0.15 150);
+  --chart-4: oklch(0.65 0.2 300);
+  --chart-5: oklch(0.6 0.25 330);
+  --sidebar: oklch(0.15 0.02 250);
+  --sidebar-foreground: oklch(0.95 0.005 240);
+  --sidebar-primary: oklch(0.7 0.18 270);
+  --sidebar-primary-foreground: oklch(1 0 0);
+  --sidebar-accent: oklch(0.25 0.03 270);
+  --sidebar-accent-foreground: oklch(0.95 0.005 240);
+  --sidebar-border: oklch(0.3 0.02 250);
+  --sidebar-ring: oklch(0.7 0.18 270);
+  --gradient-start: oklch(0.7 0.2 270);
+  --gradient-end: oklch(0.65 0.2 250);
+}
+
+/* ==================== Базовые стили ==================== */
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+    -webkit-overflow-scrolling: touch;
+    -webkit-text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    text-size-adjust: 100%;
+    /* Предотвращение выделения на мобильных */
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  body {
+    @apply bg-background text-foreground;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+    overflow-x: hidden;
+    min-height: 100vh;
+    min-height: 100dvh;
+  }
+}
+
+/* ==================== Безопасные зоны ==================== */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .safe-top { padding-top: max(12px, env(safe-area-inset-top)); }
+  .safe-bottom { padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+  .safe-left { padding-left: max(12px, env(safe-area-inset-left)); }
+  .safe-right { padding-right: max(12px, env(safe-area-inset-right)); }
+}
+
+/* ==================== Градиентные утилиты ==================== */
+.gradient-text {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.gradient-bg {
+  background: linear-gradient(135deg, var(--gradient-start), var(--gradient-end));
+}
+
+.gradient-border {
+  border-image: linear-gradient(135deg, var(--gradient-start), var(--gradient-end)) 1;
+}
+
+/* ==================== Скроллбар ==================== */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: var(--muted) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: var(--muted);
+    border-radius: 3px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb:hover {
+    background: var(--muted-foreground);
+  }
+}
+
+/* ==================== Touch манипуляции ==================== */
+.touch-manipulation {
+  touch-action: manipulation;
+}
+
+/* ==================== Печать ==================== */
+@media print {
+  .no-print { display: none !important; }
+  body {
+    background: white !important;
+    color: black !important;
+  }
+  .gradient-text {
+    -webkit-text-fill-color: black !important;
+  }
+}
+
+/* ==================== Уменьшенное движение ==================== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+
+/* ==================== Тач-устройства ==================== */
+@media (hover: none) and (pointer: coarse) {
+  /* Минимальный размер касания */
+  button, 
+  [role="button"],
+  input[type="checkbox"],
+  input[type="radio"],
+  select,
+  .touch-target {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Активные состояния вместо hover */
+  button:active,
+  [role="button"]:active {
+    opacity: 0.85;
+    transform: scale(0.98);
+  }
+}
+
+/* ==================== Десктоп ==================== */
+@media (hover: hover) and (pointer: fine) {
+  button {
+    transition: all 0.2s ease;
+  }
+}
+
+/* ==================== High DPI экраны ==================== */
+@media (-webkit-min-device-pixel-ratio: 2), (min-resolution: 192dpi) {
+  body {
+    -webkit-font-smoothing: subpixel-antialiased;
+    -moz-osx-font-smoothing: auto;
+  }
+}
+
+/* ==================== Адаптивные размеры ==================== */
+
+/* Очень маленькие телефоны (iPhone SE, старые Android) */
+@media (max-width: 360px) {
+  html { font-size: 14px; }
+  .text-lg { font-size: 1rem; }
+  .text-xl { font-size: 1.125rem; }
+  .p-4 { padding: 0.75rem; }
+  .gap-2 { gap: 0.5rem; }
+  .gap-3 { gap: 0.625rem; }
+}
+
+/* Средние телефоны */
+@media (min-width: 361px) and (max-width: 480px) {
+  html { font-size: 15px; }
+}
+
+/* Большие телефоны и маленькие планшеты */
+@media (min-width: 481px) and (max-width: 768px) {
+  html { font-size: 16px; }
+}
+
+/* Планшеты */
+@media (min-width: 769px) and (max-width: 1024px) {
+  html { font-size: 16px; }
+}
+
+/* Десктоп */
+@media (min-width: 1280px) {
+  .max-w-5xl { max-width: 1200px; }
+}
+
+/* ==================== iPhone специфика ==================== */
+@supports (-webkit-touch-callout: none) {
+  /* Fix для iOS Safari 100vh bug */
+  .min-h-screen {
+    min-height: -webkit-fill-available;
+  }
+  
+  /* Fix для iOS input zoom */
+  input[type="text"],
+  input[type="number"],
+  input[type="email"],
+  input[type="tel"],
+  input[type="search"],
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* Fix для iOS modal safe area */
+  .fixed.bottom-0 {
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+}
+
+/* ==================== Android специфика ==================== */
+@supports not (-webkit-touch-callout: none) {
+  body.keyboard-open {
+    padding-bottom: 0;
+  }
+}
+
+/* ==================== Альбомная ориентация ==================== */
+@media (orientation: landscape) and (max-height: 500px) {
+  .sticky {
+    position: relative;
+  }
+  
+  header {
+    padding-top: 8px;
+    padding-bottom: 8px;
+  }
+}
+
+/* ==================== Доступность ==================== */
+
+/* Предотвращение выделения на интерактивных элементах */
+button,
+[role="button"],
+.no-select {
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+/* Фокус для клавиатурной навигации */
+:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* Фокус для инпутов */
+input:focus,
+select:focus,
+textarea:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--primary) 15%, transparent);
+}
+
+/* Фокус для чекбоксов и радио */
+input[type="checkbox"]:focus-visible,
+input[type="radio"]:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}
+
+/* ==================== Анимации ==================== */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes slideUp {
+  from { 
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to { 
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.animate-slide-up {
+  animation: slideUp 0.3s ease-out;
+}
