@@ -5,6 +5,7 @@ import { useAppStore, formatCurrency, haptic } from '@/lib/store';
 import {
   Dialog,
   DialogContent,
+  DialogDescription,
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
@@ -77,9 +78,9 @@ export const AddItemModal = memo(function AddItemModal() {
             {modalItem.n}
           </DialogTitle>
         </DialogHeader>
-        <p className="text-sm text-muted-foreground mb-5 leading-relaxed">
+        <DialogDescription className="text-sm text-muted-foreground mb-5 leading-relaxed">
           {modalItem.d}
-        </p>
+        </DialogDescription>
 
         <ModalContent 
           key={modalKey}
