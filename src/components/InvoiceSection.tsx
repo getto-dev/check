@@ -153,7 +153,7 @@ export function InvoiceSection() {
               unit: i.u ?? 'шт',
               type: i.t ?? 'service',
               category: i.c ?? '',
-              amount: i.a ?? i.q * i.p ?? 0,
+              amount: i.a ?? (i.q ?? 1) * (i.p ?? 0),
             }));
             importItems(decompressed, data.settings || settings);
           }
