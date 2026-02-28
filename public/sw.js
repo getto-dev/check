@@ -12,14 +12,8 @@ const basePath = isProd ? '/check' : '';
 const STATIC_FILES = [
   `${basePath}/`,
   `${basePath}/manifest.json`,
-  `${basePath}/icons/icon-72x72.png`,
-  `${basePath}/icons/icon-96x96.png`,
-  `${basePath}/icons/icon-128x128.png`,
-  `${basePath}/icons/icon-144x144.png`,
-  `${basePath}/icons/icon-152x152.png`,
-  `${basePath}/icons/icon-192x192.png`,
-  `${basePath}/icons/icon-384x384.png`,
-  `${basePath}/icons/icon-512x512.png`,
+  `${basePath}/icons/android/android-192x192.png`,
+  `${basePath}/icons/android/android-512x512.png`,
 ];
 
 // Установка Service Worker
