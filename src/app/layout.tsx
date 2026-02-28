@@ -65,13 +65,13 @@ export default function RootLayout({
         
         {/* iOS Icons */}
         <link rel="apple-touch-icon" href={`${basePath}/icons/apple-touch-icon.png`} />
-        <link rel="apple-touch-icon" sizes="152x152" href={`${basePath}/icons/icon-152x152.png`} />
+        <link rel="apple-touch-icon" sizes="152x152" href={`${basePath}/icons/ios/152x152.png`} />
         <link rel="apple-touch-icon" sizes="180x180" href={`${basePath}/icons/apple-touch-icon.png`} />
-        <link rel="apple-touch-icon" sizes="167x167" href={`${basePath}/icons/icon-152x152.png`} />
+        <link rel="apple-touch-icon" sizes="167x167" href={`${basePath}/icons/ios/167x167.png`} />
         
         {/* Android Chrome */}
-        <link rel="icon" type="image/png" sizes="192x192" href={`${basePath}/icons/icon-192x192.png`} />
-        <link rel="icon" type="image/png" sizes="512x512" href={`${basePath}/icons/icon-512x512.png`} />
+        <link rel="icon" type="image/png" sizes="192x192" href={`${basePath}/icons/android/android-192x192.png`} />
+        <link rel="icon" type="image/png" sizes="512x512" href={`${basePath}/icons/android/android-512x512.png`} />
         
         {/* Windows */}
         <meta name="msapplication-config" content={`${basePath}/browserconfig.xml`} />
