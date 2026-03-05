@@ -235,7 +235,7 @@ export const SettingsSection = memo(function SettingsSection() {
       </div>
 
       <footer className="text-center pt-5 sm:pt-6 text-[10px] sm:text-[11px] text-muted-foreground/60">
-        СантехСчет v{CURRENT_VERSION} • 2026
+        Getto-Dev v{CURRENT_VERSION} • 2026
       </footer>
     </div>
   );
