@@ -15,7 +15,7 @@ interface PWAStatus {
   installPrompt: BeforeInstallPromptEvent | null;
 }
 
-const CURRENT_VERSION = '10.9';
+const CURRENT_VERSION = '11';
 
 function getStandaloneStatus() {
   if (typeof window === 'undefined') {
