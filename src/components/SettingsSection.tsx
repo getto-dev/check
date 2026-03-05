@@ -9,7 +9,7 @@ import { useTheme } from 'next-themes';
 import { usePWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
 
-const CURRENT_VERSION = '10.9.1';
+const CURRENT_VERSION = '10.9';
 
 const ThemeButton = memo(function ThemeButton({
   mode,
