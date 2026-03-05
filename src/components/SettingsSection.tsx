@@ -78,7 +78,7 @@ export const SettingsSection = memo(function SettingsSection() {
     setIsChecking(false);
 
     if (hasUpdate && !needsUpdate) {
-      alert('Установлена последняя версия');
+      alert('Обновлений нет');
     }
   }, [checkForUpdates, needsUpdate]);
 
