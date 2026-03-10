@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Mask icon for Safari - monochrome -->
+  <rect x="128" y="96" width="256" height="320" rx="24" fill="black"/>
+  <rect x="152" y="120" width="208" height="80" rx="12" fill="white"/>
+  <rect x="152" y="224" width="56" height="56" rx="8" fill="white"/>
+  <rect x="228" y="224" width="56" height="56" rx="8" fill="white"/>
+  <rect x="304" y="224" width="56" height="56" rx="8" fill="white"/>
+  <rect x="152" y="296" width="56" height="56" rx="8" fill="white"/>
+  <rect x="228" y="296" width="56" height="56" rx="8" fill="white"/>
+  <rect x="304" y="296" width="56" height="56" rx="8" fill="white"/>
+  <rect x="152" y="368" width="56" height="40" rx="8" fill="white"/>
+  <rect x="228" y="368" width="132" height="40" rx="8" fill="white"/>
+</svg>
