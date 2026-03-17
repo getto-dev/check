@@ -168,22 +168,22 @@ export function InvoiceSection() {
         <div className="flex gap-1.5 sm:gap-2">
           <Button
             variant="ghost"
-            size="icon"
             onClick={handleExport}
             title="Сохранить PDF"
-            className="rounded-xl h-10 w-10 sm:h-11 sm:w-11 hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950 touch-manipulation"
+            className="rounded-xl hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950 touch-manipulation"
             aria-label="Сохранить смету в PDF"
           >
+            Сохранить
             <Download className="w-5 h-5" />
           </Button>
           <Button
             variant="ghost"
-            size="icon"
             onClick={handleClearClick}
             title="Очистить"
-            className="rounded-xl h-10 w-10 sm:h-11 sm:w-11 hover:text-destructive hover:bg-destructive/10 touch-manipulation"
+            className="rounded-xl hover:text-destructive hover:bg-destructive/10 touch-manipulation"
             aria-label="Очистить смету"
           >
+            Очистить
             <RotateCcw className="w-5 h-5" />
           </Button>
         </div>
