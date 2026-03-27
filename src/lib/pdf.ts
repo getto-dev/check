@@ -5,7 +5,7 @@ import { formatCurrency, calculateTotals } from './format';
 
 let cachedFont: Uint8Array | null = null;
 
-const FONT_PATH = './fonts/Arimo-Cyrillic.ttf';
+const FONT_PATH = './fonts/Roboto-Regular.ttf';
 
 async function loadFont(): Promise<Uint8Array | null> {
   // Try from memory cache first
