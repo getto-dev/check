@@ -253,7 +253,7 @@ export const SettingsSection = memo(function SettingsSection() {
           Связь с нами
         </span>
         <a
-          href="https://t.me/gettocode"
+          href="tg://resolve?domain=gettocode"
           target="_blank"
           rel="noopener noreferrer"
           className={cn(
