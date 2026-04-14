@@ -263,7 +263,7 @@ export const SettingsSection = memo(function SettingsSection() {
           )}
         >
           <MessageCircle className="w-5 h-5 text-primary" />
-          <span>Telegram — @gettocode</span>
+          <span>Telegram</span>
         </a>
       </div>
 
