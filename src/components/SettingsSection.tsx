@@ -5,7 +5,7 @@ import { useAppStore } from '@/lib/store';
 import { ThemeMode } from '@/lib/types';
 import { APP_VERSION } from '@/lib/constants';
 import { cn } from '@/lib/utils';
-import { Sun, Moon, Monitor, Download, RefreshCw } from 'lucide-react';
+import { Sun, Moon, Monitor, Download, RefreshCw, MessageCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
 import { usePWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
@@ -246,6 +246,25 @@ export const SettingsSection = memo(function SettingsSection() {
             </div>
           )}
         </div>
+      </div>
+
+      <div className="space-y-2">
+        <span className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block">
+          Связь с нами
+        </span>
+        <a
+          href="https://t.me/gettocode"
+          target="_blank"
+          rel="noopener noreferrer"
+          className={cn(
+            'flex items-center gap-3 w-full py-3 sm:py-3.5 px-4 rounded-xl text-sm font-bold',
+            'border-2 border-border bg-card',
+            'hover:border-primary hover:bg-primary/5 transition-all touch-manipulation'
+          )}
+        >
+          <MessageCircle className="w-5 h-5 text-primary" />
+          <span>Telegram — @gettocode</span>
+        </a>
       </div>
 
       <footer className="text-center pt-5 sm:pt-6 text-[10px] sm:text-[11px] text-muted-foreground/60">
