@@ -7,6 +7,9 @@ import { ToastProvider } from "@/components/ui/toast";
 const inter = Inter({
   variable: "--font-inter",
   subsets: ["latin", "cyrillic"],
+  display: "swap",
+  fallback: ["system-ui", "-apple-system", "sans-serif"],
+  preload: true,
 });
 
 const isProd = process.env.NODE_ENV === 'production';
@@ -57,10 +60,10 @@ export default function RootLayout({
 
         {/* Favicon - ICO */}
         <link rel="icon" href={`${basePath}/favicon.ico`} sizes="any" />
-        
+
         {/* Favicon - SVG (modern browsers) */}
         <link rel="icon" type="image/svg+xml" href={`${basePath}/icons/icon.svg`} />
-        
+
         {/* Favicon - PNG */}
         <link rel="icon" type="image/png" sizes="16x16" href={`${basePath}/icons/favicon-16x16.png`} />
         <link rel="icon" type="image/png" sizes="32x32" href={`${basePath}/icons/favicon-32x32.png`} />
@@ -88,9 +91,13 @@ export default function RootLayout({
                 var swPath = '${basePath}/sw.js';
                 if ('serviceWorker' in navigator) {
                   window.addEventListener('load', function() {
-                    navigator.serviceWorker.register(swPath).then(
+                    navigator.serviceWorker.register(swPath, {
+                      scope: '${basePath || '/'}/'
+                    }).then(
                       function(registration) {
                         console.log('SW registered:', registration.scope);
+                        // Force update check on page load
+                        registration.update().catch(function() {});
                       },
                       function(err) {
                         console.log('SW registration failed:', err);

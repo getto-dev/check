@@ -240,6 +240,12 @@ export function usePWA() {
   const checkForUpdates = useCallback(async () => {
     if (!('serviceWorker' in navigator)) return false;
 
+    // Don't check for updates when offline
+    if (!navigator.onLine) {
+      console.log('PWA: Offline, skipping update check');
+      return false;
+    }
+
     try {
       const response = await fetch('./version.json?t=' + Date.now(), {
         cache: 'no-store',
@@ -267,7 +273,8 @@ export function usePWA() {
 
       return false;
     } catch (error) {
-      console.error('PWA: Update check error:', error);
+      // Silently fail when offline - this is expected
+      console.log('PWA: Update check failed (likely offline)');
       return false;
     }
   }, []);
