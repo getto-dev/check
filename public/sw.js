@@ -1,6 +1,6 @@
 // Service Worker for СантехСчет PWA
 // Version synced with version.json and constants.ts
-const VERSION = '19';
+const VERSION = '20';
 const CACHE_NAME = `santehschet-v${VERSION}`;
 
 // Static files to pre-cache on install
