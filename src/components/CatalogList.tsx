@@ -1,27 +1,46 @@
 'use client';
 
-import { memo, useMemo, useCallback } from 'react';
+import { memo, useMemo, useCallback, Fragment } from 'react';
 import { useAppStore, formatCurrency, haptic } from '@/lib/store';
 import { CATALOG, CATEGORIES } from '@/lib/catalog';
 import { CatalogItem } from '@/lib/types';
+import { tokenizeQuery, matchItem, getHighlightTokens, buildHighlightPattern, escapeRegex } from '@/lib/search';
 import { Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
+/**
+ * Highlight matching tokens in text for search results.
+ * Supports multi-token search - each word in the query is highlighted independently.
+ */
 const highlight = (text: string, query: string) => {
   if (!query || query.length < 2) return text;
-  const parts = text.split(new RegExp(`(${query})`, 'gi'));
-  return parts.map((part, i) =>
-    part.toLowerCase() === query.toLowerCase() ? (
-      <span
-        key={i}
-        className="gradient-bg/25 bg-gradient-to-r px-0.5 rounded font-semibold text-primary"
-      >
-        {part}
-      </span>
-    ) : (
-      part
-    )
-  );
+
+  const tokens = getHighlightTokens(query);
+  if (tokens.length === 0) return text;
+
+  const pattern = buildHighlightPattern(tokens);
+  if (!pattern) return text;
+
+  try {
+    const parts = text.split(new RegExp(`(${pattern})`, 'gi'));
+    return parts.map((part, i) => {
+      const isMatch = tokens.some(t => part.toLowerCase() === t.toLowerCase());
+      if (isMatch) {
+        return (
+          <span
+            key={i}
+            className="gradient-bg/25 bg-gradient-to-r px-0.5 rounded font-semibold text-primary"
+          >
+            {part}
+          </span>
+        );
+      }
+      return <Fragment key={i}>{part}</Fragment>;
+    });
+  } catch {
+    // Fallback if regex fails
+    return text;
+  }
 };
 
 const CatalogItemCard = memo(function CatalogItemCard({
@@ -124,19 +143,28 @@ export function CatalogList() {
   const { selectedCategory, searchQuery, addItem, openModal } = useAppStore();
 
   const results = useMemo(() => {
-    const query = searchQuery.toLowerCase().trim();
+    const query = searchQuery.trim();
+    const tokens = tokenizeQuery(query);
     const results: (CatalogItem & { relevance: number })[] = [];
+
+    // Build category name lookup
+    const catNames: Record<string, string> = {};
+    CATEGORIES.forEach(c => { catNames[c.id] = c.name; });
 
     Object.entries(CATALOG).forEach(([catId, items]) => {
       if (selectedCategory && catId !== selectedCategory) return;
+      const categoryName = catNames[catId] || '';
       items.forEach((item) => {
-        const matchName = item.n.toLowerCase().includes(query);
-        const matchDesc = item.d.toLowerCase().includes(query);
-        if (!query || matchName || matchDesc) {
+        const relevance = matchItem(
+          { n: item.n, d: item.d, catId },
+          tokens,
+          categoryName
+        );
+        if (relevance > 0) {
           results.push({
             ...item,
             catId,
-            relevance: matchName ? 2 : 1,
+            relevance,
           });
         }
       });

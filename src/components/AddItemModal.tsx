@@ -34,17 +34,17 @@ const ModalInput = memo(function ModalInput({
     const newValue = e.target.value;
     setDisplayValue(newValue);
 
-    if (newValue === '') {
+    if (newValue === '' || newValue === '.') {
       return;
     }
-    const parsed = parseInt(newValue);
+    const parsed = parseFloat(newValue);
     if (!Number.isNaN(parsed)) {
       onChange(parsed);
     }
   }, [onChange]);
 
   const handleBlur = useCallback(() => {
-    const parsed = parseInt(displayValue);
+    const parsed = parseFloat(displayValue);
     const finalValue = Number.isNaN(parsed) ? (min ?? 0) : parsed;
     onChange(finalValue);
     setDisplayValue(String(finalValue));
@@ -58,7 +58,8 @@ const ModalInput = memo(function ModalInput({
       <input
         id={inputId}
         type="number"
-        inputMode="numeric"
+        inputMode="decimal"
+        step="any"
         value={displayValue}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -82,7 +83,7 @@ export const AddItemModal = memo(function AddItemModal() {
 
   const handleConfirm = useCallback((quantity: number, price: number) => {
     if (!modalItem) return;
-    addItem(modalItem, Math.max(1, quantity), Math.max(0, price));
+    addItem(modalItem, Math.max(0.1, quantity), Math.max(0, price));
     closeModal();
     haptic('success');
   }, [modalItem, addItem, closeModal]);
@@ -122,7 +123,7 @@ const ModalContent = memo(function ModalContent({
   defaultPrice: number;
   onConfirm: (quantity: number, price: number) => void;
 }) {
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [price, setPrice] = useState(defaultPrice);
 
   const handleConfirm = useCallback(() => {

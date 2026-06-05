@@ -44,6 +44,7 @@ interface AppState {
   addItem: (item: CatalogItem, quantity?: number, price?: number) => void;
   addManualItem: (item: Omit<InvoiceItem, 'id' | 'amount'>) => void;
   updateQuantity: (id: number, delta: number) => void;
+  setQuantity: (id: number, quantity: number) => void;
   removeItem: (id: number) => void;
   clearItems: () => void;
   updateSettings: (settings: Partial<Settings>) => void;
@@ -82,7 +83,7 @@ export const useAppStore = create<AppState>()(
           set({
             items: items.map((i) =>
               i.id === existingItem.id
-                ? { ...i, quantity: i.quantity + quantity, amount: (i.quantity + quantity) * i.price }
+                ? { ...i, quantity: +(i.quantity + quantity).toFixed(2), amount: Math.round((i.quantity + quantity) * i.price) }
                 : i
             ),
           });
@@ -99,7 +100,7 @@ export const useAppStore = create<AppState>()(
           unit: item.u,
           type: 'service',
           category: item.catId,
-          amount: quantity * price,
+          amount: Math.round(quantity * price),
         };
         set({ items: [...items, newItem] });
       },
@@ -120,8 +121,23 @@ export const useAppStore = create<AppState>()(
             item.id === id
               ? {
                   ...item,
-                  quantity: Math.max(1, item.quantity + delta),
-                  amount: Math.max(1, item.quantity + delta) * item.price,
+                  quantity: Math.max(0.1, +(item.quantity + delta).toFixed(2)),
+                  amount: Math.max(0.1, +(item.quantity + delta).toFixed(2)) * item.price,
+                }
+              : item
+          ),
+        }));
+      },
+
+      setQuantity: (id, quantity) => {
+        const safeQty = Math.max(0.1, quantity);
+        set((state) => ({
+          items: state.items.map((item) =>
+            item.id === id
+              ? {
+                  ...item,
+                  quantity: safeQty,
+                  amount: Math.round(safeQty * item.price),
                 }
               : item
           ),
@@ -180,7 +196,7 @@ export const useAppStore = create<AppState>()(
 );
 
 // Re-export for convenience
-export { formatCurrency } from './format';
+export { formatCurrency, formatQuantity } from './format';
 
 export const haptic = (type: 'light' | 'medium' | 'success' | 'error' = 'light') => {
   if (typeof window === 'undefined' || !('vibrate' in navigator)) return;

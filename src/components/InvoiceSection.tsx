@@ -1,7 +1,7 @@
 'use client';
 
 import { memo, useCallback, useState } from 'react';
-import { useAppStore, formatCurrency, haptic, exportToPdf } from '@/lib/store';
+import { useAppStore, formatCurrency, formatQuantity, haptic, exportToPdf } from '@/lib/store';
 import { InvoiceItem } from '@/lib/types';
 import { Minus, Plus, Trash2, Download, RotateCcw } from 'lucide-react';
 import { cn } from '@/lib/utils';
@@ -12,21 +12,52 @@ import { useToast } from '@/components/ui/toast';
 const InvoiceItemRow = memo(function InvoiceItemRow({
   item,
   onUpdate,
+  onSetQuantity,
   onRemove,
 }: {
   item: InvoiceItem;
   onUpdate: (id: number, delta: number) => void;
+  onSetQuantity: (id: number, quantity: number) => void;
   onRemove: (id: number) => void;
 }) {
+  const [editValue, setEditValue] = useState<string | null>(null);
+
   const handleDecrease = useCallback(() => {
-    onUpdate(item.id, -1);
+    const step = item.unit === 'шт' || item.unit === 'комп' || item.unit === 'выезд' || item.unit === 'контур' ? 1 : 0.5;
+    onUpdate(item.id, -step);
     haptic('light');
-  }, [item.id, onUpdate]);
+  }, [item.id, item.unit, onUpdate]);
 
   const handleIncrease = useCallback(() => {
-    onUpdate(item.id, 1);
+    const step = item.unit === 'шт' || item.unit === 'комп' || item.unit === 'выезд' || item.unit === 'контур' ? 1 : 0.5;
+    onUpdate(item.id, step);
     haptic('light');
-  }, [item.id, onUpdate]);
+  }, [item.id, item.unit, onUpdate]);
+
+  const handleQuantityClick = useCallback(() => {
+    setEditValue(String(item.quantity));
+  }, [item.quantity]);
+
+  const handleQuantityChange = useCallback((e: React.ChangeEvent<HTMLInputElement>) => {
+    setEditValue(e.target.value);
+  }, []);
+
+  const handleQuantityBlur = useCallback(() => {
+    if (editValue !== null) {
+      const parsed = parseFloat(editValue);
+      const finalValue = Number.isNaN(parsed) ? item.quantity : Math.max(0.1, parsed);
+      onSetQuantity(item.id, finalValue);
+      setEditValue(null);
+    }
+  }, [editValue, item.id, item.quantity, onSetQuantity]);
+
+  const handleQuantityKeyDown = useCallback((e: React.KeyboardEvent) => {
+    if (e.key === 'Enter') {
+      handleQuantityBlur();
+    } else if (e.key === 'Escape') {
+      setEditValue(null);
+    }
+  }, [handleQuantityBlur]);
 
   const handleRemove = useCallback(() => {
     onRemove(item.id);
@@ -48,9 +79,27 @@ const InvoiceItemRow = memo(function InvoiceItemRow({
         >
           <Minus className="w-4 h-4" />
         </button>
-        <span className="font-extrabold tabular-nums min-w-6 text-center text-sm sm:text-base">
-          {item.quantity}
-        </span>
+        {editValue !== null ? (
+          <input
+            type="number"
+            inputMode="decimal"
+            step="any"
+            value={editValue}
+            onChange={handleQuantityChange}
+            onBlur={handleQuantityBlur}
+            onKeyDown={handleQuantityKeyDown}
+            autoFocus
+            className="w-16 text-center font-extrabold tabular-nums text-sm sm:text-base bg-background border border-primary rounded px-1 py-0.5 focus:outline-none"
+          />
+        ) : (
+          <span
+            className="font-extrabold tabular-nums min-w-6 text-center text-sm sm:text-base cursor-pointer hover:text-primary transition-colors"
+            onClick={handleQuantityClick}
+            title="Нажмите для редактирования"
+          >
+            {formatQuantity(item.quantity)}
+          </span>
+        )}
         <button
           onClick={handleIncrease}
           className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg bg-muted hover:text-primary active:scale-90 transition-all touch-manipulation"
@@ -118,7 +167,7 @@ const SectionHeader = memo(function SectionHeader({
 });
 
 export function InvoiceSection() {
-  const { items, settings, calculateTotals, updateQuantity, removeItem, clearItems } = useAppStore();
+  const { items, settings, calculateTotals, updateQuantity, setQuantity, removeItem, clearItems } = useAppStore();
   const totals = calculateTotals();
   const { showToast } = useToast();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
@@ -198,6 +247,7 @@ export function InvoiceSection() {
                 key={item.id}
                 item={item}
                 onUpdate={updateQuantity}
+                onSetQuantity={setQuantity}
                 onRemove={removeItem}
               />
             ))}
@@ -214,6 +264,7 @@ export function InvoiceSection() {
                 key={item.id}
                 item={item}
                 onUpdate={updateQuantity}
+                onSetQuantity={setQuantity}
                 onRemove={removeItem}
               />
             ))}

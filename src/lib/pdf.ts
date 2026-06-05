@@ -1,7 +1,7 @@
 import { PDFDocument, rgb, StandardFonts } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import { InvoiceItem, Settings } from './types';
-import { formatCurrency, calculateTotals } from './format';
+import { formatCurrency, formatQuantity, calculateTotals } from './format';
 
 let cachedFont: Uint8Array | null = null;
 
@@ -191,7 +191,7 @@ export const exportToPdf = async (items: InvoiceItem[], settings: Settings) => {
       });
 
       // Draw other columns
-      const qtyText = `${item.quantity} ${item.unit}`;
+      const qtyText = `${formatQuantity(item.quantity)} ${item.unit}`;
       const qtyWidth = font.widthOfTextAtSize(qtyText, rowSize);
       page.drawText(qtyText, { x: colQtyX + (colQtyWidth - qtyWidth) / 2, y: y - 8, size: rowSize, font, color: primaryColor });
 

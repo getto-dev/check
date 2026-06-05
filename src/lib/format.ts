@@ -12,7 +12,18 @@ export const formatCurrency = (value: number, showZeroAsText = false): string =>
     style: 'currency',
     currency: 'RUB',
     maximumFractionDigits: 0,
-  }).format(value);
+  }).format(Math.round(value));
+};
+
+/**
+ * Format quantity for display — removes trailing zeros from decimals.
+ * Examples: 1 → "1", 1.5 → "1.5", 2.50 → "2.5", 0.5 → "0.5"
+ */
+export const formatQuantity = (value: number): string => {
+  if (Number.isInteger(value)) return String(value);
+  // Remove trailing zeros: 1.50 → 1.5, 2.00 → 2
+  const fixed = value.toFixed(2);
+  return parseFloat(fixed).toString();
 };
 
 /**

@@ -69,17 +69,17 @@ const NumberInput = memo(function NumberInput({
     const newValue = e.target.value;
     setDisplayValue(newValue);
 
-    if (newValue === '') {
+    if (newValue === '' || newValue === '.') {
       return;
     }
-    const parsed = parseInt(newValue);
+    const parsed = parseFloat(newValue);
     if (!Number.isNaN(parsed)) {
       onChange(parsed);
     }
   }, [onChange]);
 
   const handleBlur = useCallback(() => {
-    const parsed = parseInt(displayValue);
+    const parsed = parseFloat(displayValue);
     const finalValue = Number.isNaN(parsed) ? (min ?? 0) : parsed;
     onChange(finalValue);
     setDisplayValue(String(finalValue));
@@ -93,7 +93,8 @@ const NumberInput = memo(function NumberInput({
       <input
         id={inputId}
         type="number"
-        inputMode="numeric"
+        inputMode="decimal"
+        step="any"
         value={displayValue}
         onChange={handleChange}
         onBlur={handleBlur}
@@ -113,7 +114,7 @@ export function ManualSection() {
   const { manualType, setManualType, addManualItem } = useAppStore();
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
-  const [quantity, setQuantity] = useState(1);
+  const [quantity, setQuantity] = useState<number>(1);
   const [unit, setUnit] = useState('шт');
   const [price, setPrice] = useState(0);
 
@@ -123,7 +124,7 @@ export function ManualSection() {
     addManualItem({
       name: name.trim(),
       description: description.trim(),
-      quantity: Math.max(1, quantity),
+      quantity: Math.max(0.1, quantity),
       unit: unit || 'шт',
       price: Math.max(0, price),
       type: manualType,
