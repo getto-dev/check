@@ -47,16 +47,3 @@ export interface Totals {
   discountAmount: number;
   grandTotal: number;
 }
-
-/**
- * Saved estimate — a snapshot of items + settings that can be reopened
- * later for further editing.
- */
-export interface SavedEstimate {
-  id: string;
-  name: string;
-  items: CompressedItem[];
-  settings: Settings;
-  createdAt: number;
-  updatedAt: number;
-}

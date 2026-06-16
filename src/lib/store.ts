@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { persist, createJSONStorage } from 'zustand/middleware';
-import { InvoiceItem, Settings, TabType, ThemeMode, Totals, CompressedItem, CatalogItem, SavedEstimate } from './types';
+import { InvoiceItem, Settings, TabType, ThemeMode, Totals, CompressedItem, CatalogItem } from './types';
 import { formatCurrency, calculateTotals } from './format';
 
 const compressItems = (items: InvoiceItem[]): CompressedItem[] =>
@@ -41,7 +41,6 @@ interface AppState {
   modalOpen: boolean;
   manualType: 'service' | 'product';
   hydrated: boolean;
-  savedEstimates: SavedEstimate[];
   addItem: (item: CatalogItem, quantity?: number, price?: number) => void;
   addManualItem: (item: Omit<InvoiceItem, 'id' | 'amount'>) => void;
   updateQuantity: (id: number, delta: number) => void;
@@ -58,10 +57,8 @@ interface AppState {
   setThemeMode: (mode: ThemeMode) => void;
   setHydrated: (state: boolean) => void;
   calculateTotals: () => Totals;
-  saveEstimate: (name: string, existingId?: string) => string;
-  loadEstimate: (id: string) => boolean;
-  deleteEstimate: (id: string) => void;
-  renameEstimate: (id: string, name: string) => void;
+  /** Replace items + settings atomically — used when loading a saved HTML file. */
+  loadEstimateData: (items: InvoiceItem[], settings: Settings) => void;
 }
 
 export const useAppStore = create<AppState>()(
@@ -77,7 +74,6 @@ export const useAppStore = create<AppState>()(
       modalOpen: false,
       manualType: 'service',
       hydrated: false,
-      savedEstimates: [],
 
       addItem: (item, quantity = 1, price = item.p) => {
         const { items } = get();
@@ -180,65 +176,11 @@ export const useAppStore = create<AppState>()(
         return calculateTotals(items, settings.discount);
       },
 
-      saveEstimate: (name, existingId) => {
-        const { items, settings, savedEstimates } = get();
-        const trimmedName = name.trim() || `Смета от ${new Date().toLocaleDateString('ru-RU')}`;
-        const now = Date.now();
-        const compressed = compressItems(items);
-
-        if (existingId) {
-          // Update existing estimate
-          set({
-            savedEstimates: savedEstimates.map((e) =>
-              e.id === existingId
-                ? { ...e, name: trimmedName, items: compressed, settings: { ...settings }, updatedAt: now }
-                : e
-            ),
-          });
-          return existingId;
-        }
-
-        // Create a new estimate
-        const id = `est_${now}_${Math.random().toString(36).slice(2, 8)}`;
-        const newEstimate: SavedEstimate = {
-          id,
-          name: trimmedName,
-          items: compressed,
-          settings: { ...settings },
-          createdAt: now,
-          updatedAt: now,
-        };
-        set({ savedEstimates: [newEstimate, ...savedEstimates] });
-        return id;
-      },
-
-      loadEstimate: (id) => {
-        const { savedEstimates } = get();
-        const estimate = savedEstimates.find((e) => e.id === id);
-        if (!estimate) return false;
-
-        // Restore items + settings from the saved snapshot
+      loadEstimateData: (newItems, newSettings) => {
         set({
-          items: decompressItems(estimate.items),
-          settings: { ...estimate.settings },
+          items: newItems,
+          settings: { ...newSettings },
         });
-        return true;
-      },
-
-      deleteEstimate: (id) => {
-        set((state) => ({
-          savedEstimates: state.savedEstimates.filter((e) => e.id !== id),
-        }));
-      },
-
-      renameEstimate: (id, name) => {
-        const trimmed = name.trim();
-        if (!trimmed) return;
-        set((state) => ({
-          savedEstimates: state.savedEstimates.map((e) =>
-            e.id === id ? { ...e, name: trimmed, updatedAt: Date.now() } : e
-          ),
-        }));
       },
     }),
     {
@@ -248,17 +190,12 @@ export const useAppStore = create<AppState>()(
         items: compressItems(state.items),
         settings: state.settings,
         themeMode: state.themeMode,
-        savedEstimates: state.savedEstimates,
       }),
       onRehydrateStorage: () => (state) => {
         if (state) {
           const rawItems = state.items as unknown as CompressedItem[];
           if (rawItems?.[0]?.i) {
             state.items = decompressItems(rawItems);
-          }
-          // Ensure savedEstimates is always an array (legacy storage compatibility)
-          if (!Array.isArray(state.savedEstimates)) {
-            state.savedEstimates = [];
           }
           state.setHydrated(true);
         }

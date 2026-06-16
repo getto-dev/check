@@ -1,14 +1,14 @@
 'use client';
 
-import { memo, useCallback, useState } from 'react';
+import { memo, useCallback, useState, useRef } from 'react';
 import { useAppStore, formatCurrency, formatQuantity, haptic, exportToPdf } from '@/lib/store';
 import { InvoiceItem } from '@/lib/types';
+import { saveEstimateToFile, loadEstimateFromFile, EstimateFileError } from '@/lib/estimate-file';
 import { Minus, Plus, Trash2, Download, RotateCcw, Save, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
-import { SavedEstimatesDialog } from '@/components/SavedEstimatesDialog';
 
 const InvoiceItemRow = memo(function InvoiceItemRow({
   item,
@@ -132,10 +132,8 @@ const InvoiceItemRow = memo(function InvoiceItemRow({
 
 const EmptyState = memo(function EmptyState({
   onOpen,
-  hasSaved,
 }: {
   onOpen: () => void;
-  hasSaved: boolean;
 }) {
   return (
     <div className="space-y-5 sm:space-y-6">
@@ -151,9 +149,9 @@ const EmptyState = memo(function EmptyState({
         <Button
           variant="ghost"
           onClick={onOpen}
-          title="Открыть сохранённую смету"
+          title="Открыть смету из файла"
           className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
-          aria-label="Открыть сохранённую смету"
+          aria-label="Открыть смету из файла"
         >
           <FolderOpen className="w-5 h-5" />
           Открыть
@@ -175,17 +173,15 @@ const EmptyState = memo(function EmptyState({
           </svg>
         </div>
         <div className="text-base font-bold text-foreground mb-2">Смета пуста</div>
-        <div className="text-sm mb-5">Добавьте услуги из каталога</div>
-        {hasSaved && (
-          <Button
-            variant="outline"
-            onClick={onOpen}
-            className="rounded-xl touch-manipulation"
-          >
-            <FolderOpen className="w-4 h-4" />
-            Открыть сохранённую смету
-          </Button>
-        )}
+        <div className="text-sm mb-5">Добавьте услуги из каталога или откройте сохранённый файл сметы</div>
+        <Button
+          variant="outline"
+          onClick={onOpen}
+          className="rounded-xl touch-manipulation"
+        >
+          <FolderOpen className="w-4 h-4" />
+          Открыть смету из файла
+        </Button>
       </div>
     </div>
   );
@@ -207,12 +203,14 @@ const SectionHeader = memo(function SectionHeader({
 });
 
 export function InvoiceSection() {
-  const { items, settings, calculateTotals, updateQuantity, setQuantity, removeItem, clearItems, savedEstimates } = useAppStore();
+  const { items, settings, calculateTotals, updateQuantity, setQuantity, removeItem, clearItems, loadEstimateData } = useAppStore();
   const totals = calculateTotals();
   const { showToast } = useToast();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
-  const [showSavedDialog, setShowSavedDialog] = useState(false);
-  const [savedDialogMode, setSavedDialogMode] = useState<'save' | 'open'>('save');
+  const [pendingFile, setPendingFile] = useState<File | null>(null);
+
+  // Hidden file input for opening saved HTML estimate files
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const services = items.filter((i) => i.type === 'service');
   const products = items.filter((i) => i.type === 'product');
@@ -247,24 +245,92 @@ export function InvoiceSection() {
       return;
     }
     haptic('light');
-    setSavedDialogMode('save');
-    setShowSavedDialog(true);
-  }, [items.length, showToast]);
+    const result = saveEstimateToFile(items, settings);
+    if (result) {
+      showToast(`Файл сохранён: ${result.filename}`, 'success');
+    } else {
+      showToast('Не удалось сохранить файл', 'error');
+    }
+  }, [items, settings, showToast]);
 
   const handleOpenClick = useCallback(() => {
     haptic('light');
-    setSavedDialogMode('open');
-    setShowSavedDialog(true);
+    // Reset value so picking the same file twice triggers onChange
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
+    fileInputRef.current?.click();
   }, []);
+
+  const handleFileSelected = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      const file = e.target.files?.[0];
+      if (!file) return;
+
+      // If current items exist, ask user to confirm overwrite
+      if (items.length > 0) {
+        setPendingFile(file);
+        return;
+      }
+
+      // No current items — load directly
+      try {
+        const loaded = await loadEstimateFromFile(file);
+        loadEstimateData(loaded.items, loaded.settings);
+        haptic('success');
+        showToast(`Смета «${loaded.name}» открыта`, 'success');
+      } catch (err) {
+        const message =
+          err instanceof EstimateFileError
+            ? err.message
+            : 'Не удалось открыть файл сметы';
+        haptic('error');
+        showToast(message, 'error');
+      }
+    },
+    [items.length, loadEstimateData, showToast]
+  );
+
+  const handleConfirmOverwriteFile = useCallback(async () => {
+    if (!pendingFile) return;
+    try {
+      const loaded = await loadEstimateFromFile(pendingFile);
+      loadEstimateData(loaded.items, loaded.settings);
+      haptic('success');
+      showToast(`Смета «${loaded.name}» открыта`, 'success');
+    } catch (err) {
+      const message =
+        err instanceof EstimateFileError
+          ? err.message
+          : 'Не удалось открыть файл сметы';
+      haptic('error');
+      showToast(message, 'error');
+    } finally {
+      setPendingFile(null);
+    }
+  }, [pendingFile, loadEstimateData, showToast]);
 
   if (items.length === 0) {
     return (
       <>
-        <EmptyState onOpen={handleOpenClick} hasSaved={savedEstimates.length > 0} />
-        <SavedEstimatesDialog
-          open={showSavedDialog}
-          mode={savedDialogMode}
-          onOpenChange={setShowSavedDialog}
+        <EmptyState onOpen={handleOpenClick} />
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept=".html,text/html"
+          onChange={handleFileSelected}
+          className="hidden"
+          aria-hidden="true"
+        />
+        <ConfirmDialog
+          open={pendingFile !== null}
+          onOpenChange={(o) => !o && setPendingFile(null)}
+          title="Заменить текущую смету?"
+          description="Текущие позиции будут заменены позициями из выбранного файла. Если нужно их сохранить — закройте это окно и сначала сохраните текущую смету в файл."
+          confirmText="Открыть и заменить"
+          cancelText="Отмена"
+          onConfirm={handleConfirmOverwriteFile}
+          variant="destructive"
         />
       </>
     );
@@ -285,9 +351,9 @@ export function InvoiceSection() {
           <Button
             variant="ghost"
             onClick={handleOpenClick}
-            title="Открыть сохранённую смету"
+            title="Открыть смету из файла"
             className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
-            aria-label="Открыть сохранённую смету"
+            aria-label="Открыть смету из файла"
           >
             <FolderOpen className="w-5 h-5" />
             <span className="hidden sm:inline">Открыть</span>
@@ -295,9 +361,9 @@ export function InvoiceSection() {
           <Button
             variant="ghost"
             onClick={handleSaveClick}
-            title="Сохранить смету"
+            title="Сохранить смету в файл"
             className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
-            aria-label="Сохранить смету"
+            aria-label="Сохранить смету в файл"
           >
             <Save className="w-5 h-5" />
             <span className="hidden sm:inline">Сохранить</span>
@@ -376,6 +442,15 @@ export function InvoiceSection() {
         </div>
       </footer>
 
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept=".html,text/html"
+        onChange={handleFileSelected}
+        className="hidden"
+        aria-hidden="true"
+      />
+
       <ConfirmDialog
         open={showClearConfirm}
         onOpenChange={setShowClearConfirm}
@@ -387,10 +462,15 @@ export function InvoiceSection() {
         variant="destructive"
       />
 
-      <SavedEstimatesDialog
-        open={showSavedDialog}
-        mode={savedDialogMode}
-        onOpenChange={setShowSavedDialog}
+      <ConfirmDialog
+        open={pendingFile !== null}
+        onOpenChange={(o) => !o && setPendingFile(null)}
+        title="Заменить текущую смету?"
+        description="Текущие позиции будут заменены позициями из выбранного файла. Если нужно их сохранить — закройте это окно и сначала сохраните текущую смету в файл."
+        confirmText="Открыть и заменить"
+        cancelText="Отмена"
+        onConfirm={handleConfirmOverwriteFile}
+        variant="destructive"
       />
     </div>
   );
