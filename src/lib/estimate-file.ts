@@ -122,8 +122,6 @@ const buildReadableHtml = (items: InvoiceItem[], settings: Settings, name: strin
       <div class="subtotal">Итого за ${escapeHtml(title.toLowerCase())}: ${escapeHtml(formatCurrency(list.reduce((s, i) => s + i.amount, 0)))}</div>
     </section>`;
 
-  const savedAtStr = new Date(savedAt).toLocaleString('ru-RU');
-
   return `<!DOCTYPE html>
 <html lang="ru">
 <head>
@@ -143,8 +141,6 @@ const buildReadableHtml = (items: InvoiceItem[], settings: Settings, name: strin
     }
     header { border-bottom: 2px solid #8b5cf6; padding-bottom: 12px; margin-bottom: 24px; }
     h1 { font-size: 22px; margin: 0 0 6px; color: #1a1a1a; }
-    .meta { font-size: 13px; color: #666; margin: 2px 0; }
-    .meta strong { color: #1a1a1a; }
     section { margin-bottom: 28px; }
     h2 {
       font-size: 14px;
@@ -202,17 +198,9 @@ const buildReadableHtml = (items: InvoiceItem[], settings: Settings, name: strin
     .totals-row.discount { color: #dc2626; }
     .totals-row .label { color: #666; text-transform: uppercase; font-size: 12px; letter-spacing: 1px; }
     .totals-row.grand .label { color: #1a1a1a; font-size: 14px; }
-    footer { margin-top: 32px; font-size: 11px; color: #999; text-align: center; }
   </style>
 </head>
 <body>
-  <header>
-    <h1>Смета «${escapeHtml(name)}»</h1>
-    <div class="meta"><strong>Адрес объекта:</strong> ${escapeHtml(settings.address || 'не указан')}</div>
-    <div class="meta"><strong>Сохранено:</strong> ${escapeHtml(savedAtStr)}</div>
-    ${settings.discount > 0 ? `<div class="meta"><strong>Скидка на услуги:</strong> ${settings.discount}%</div>` : ''}
-  </header>
-
   ${renderSection(services, 'Работы и услуги')}
   ${renderSection(products, 'Материалы и товары')}
 
@@ -222,8 +210,6 @@ const buildReadableHtml = (items: InvoiceItem[], settings: Settings, name: strin
     ${settings.discount > 0 ? `<div class="totals-row discount"><span class="label">Скидка ${settings.discount}%</span><span>−${escapeHtml(formatCurrency(totals.discountAmount))}</span></div>` : ''}
     <div class="totals-row grand"><span class="label">Итого к оплате</span><span>${escapeHtml(formatCurrency(totals.grandTotal))}</span></div>
   </div>
-
-  <footer>СантехСчёт — файл сметы. Откройте это файл в приложении, чтобы продолжить редактирование.</footer>
 
   <script type="application/json" id="${DATA_SCRIPT_ID}">
 ${escapeJsonForScript(JSON.stringify({
