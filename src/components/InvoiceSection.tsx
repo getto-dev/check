@@ -3,11 +3,12 @@
 import { memo, useCallback, useState } from 'react';
 import { useAppStore, formatCurrency, formatQuantity, haptic, exportToPdf } from '@/lib/store';
 import { InvoiceItem } from '@/lib/types';
-import { Minus, Plus, Trash2, Download, RotateCcw } from 'lucide-react';
+import { Minus, Plus, Trash2, Download, RotateCcw, Save, FolderOpen } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
+import { SavedEstimatesDialog } from '@/components/SavedEstimatesDialog';
 
 const InvoiceItemRow = memo(function InvoiceItemRow({
   item,
@@ -129,24 +130,63 @@ const InvoiceItemRow = memo(function InvoiceItemRow({
   );
 });
 
-const EmptyState = memo(function EmptyState() {
+const EmptyState = memo(function EmptyState({
+  onOpen,
+  hasSaved,
+}: {
+  onOpen: () => void;
+  hasSaved: boolean;
+}) {
   return (
-    <div className="text-center py-12 sm:py-16 px-4 text-muted-foreground">
-      <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
-        <svg
-          viewBox="0 0 24 24"
-          fill="none"
-          stroke="currentColor"
-          strokeWidth="2"
-          className="w-8 h-8 sm:w-9 sm:h-9 opacity-50"
-          aria-hidden="true"
+    <div className="space-y-5 sm:space-y-6">
+      <header className="flex flex-wrap justify-between items-start gap-3 sm:gap-4 pb-3 sm:pb-4 border-b-2 border-primary">
+        <div>
+          <h2 className="text-xl sm:text-2xl font-extrabold uppercase tracking-wide gradient-text">
+            Смета
+          </h2>
+          <p className="text-[10px] text-muted-foreground font-semibold uppercase tracking-widest mt-1 max-w-[200px] sm:max-w-none truncate">
+            Адрес не указан
+          </p>
+        </div>
+        <Button
+          variant="ghost"
+          onClick={onOpen}
+          title="Открыть сохранённую смету"
+          className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
+          aria-label="Открыть сохранённую смету"
         >
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14,2 14,8 20,8" />
-        </svg>
+          <FolderOpen className="w-5 h-5" />
+          Открыть
+        </Button>
+      </header>
+
+      <div className="text-center py-12 sm:py-16 px-4 text-muted-foreground">
+        <div className="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-4 rounded-full bg-muted flex items-center justify-center">
+          <svg
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            className="w-8 h-8 sm:w-9 sm:h-9 opacity-50"
+            aria-hidden="true"
+          >
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
+            <polyline points="14,2 14,8 20,8" />
+          </svg>
+        </div>
+        <div className="text-base font-bold text-foreground mb-2">Смета пуста</div>
+        <div className="text-sm mb-5">Добавьте услуги из каталога</div>
+        {hasSaved && (
+          <Button
+            variant="outline"
+            onClick={onOpen}
+            className="rounded-xl touch-manipulation"
+          >
+            <FolderOpen className="w-4 h-4" />
+            Открыть сохранённую смету
+          </Button>
+        )}
       </div>
-      <div className="text-base font-bold text-foreground mb-2">Смета пуста</div>
-      <div className="text-sm">Добавьте услуги из каталога</div>
     </div>
   );
 });
@@ -167,10 +207,12 @@ const SectionHeader = memo(function SectionHeader({
 });
 
 export function InvoiceSection() {
-  const { items, settings, calculateTotals, updateQuantity, setQuantity, removeItem, clearItems } = useAppStore();
+  const { items, settings, calculateTotals, updateQuantity, setQuantity, removeItem, clearItems, savedEstimates } = useAppStore();
   const totals = calculateTotals();
   const { showToast } = useToast();
   const [showClearConfirm, setShowClearConfirm] = useState(false);
+  const [showSavedDialog, setShowSavedDialog] = useState(false);
+  const [savedDialogMode, setSavedDialogMode] = useState<'save' | 'open'>('save');
 
   const services = items.filter((i) => i.type === 'service');
   const products = items.filter((i) => i.type === 'product');
@@ -199,8 +241,33 @@ export function InvoiceSection() {
     showToast('Смета очищена', 'info');
   }, [clearItems, showToast]);
 
+  const handleSaveClick = useCallback(() => {
+    if (!items.length) {
+      showToast('Смета пуста — нечего сохранять', 'info');
+      return;
+    }
+    haptic('light');
+    setSavedDialogMode('save');
+    setShowSavedDialog(true);
+  }, [items.length, showToast]);
+
+  const handleOpenClick = useCallback(() => {
+    haptic('light');
+    setSavedDialogMode('open');
+    setShowSavedDialog(true);
+  }, []);
+
   if (items.length === 0) {
-    return <EmptyState />;
+    return (
+      <>
+        <EmptyState onOpen={handleOpenClick} hasSaved={savedEstimates.length > 0} />
+        <SavedEstimatesDialog
+          open={showSavedDialog}
+          mode={savedDialogMode}
+          onOpenChange={setShowSavedDialog}
+        />
+      </>
+    );
   }
 
   return (
@@ -214,16 +281,36 @@ export function InvoiceSection() {
             {settings.address || 'Адрес не указан'}
           </p>
         </div>
-        <div className="flex gap-1.5 sm:gap-2">
+        <div className="flex flex-wrap gap-1.5 sm:gap-2">
+          <Button
+            variant="ghost"
+            onClick={handleOpenClick}
+            title="Открыть сохранённую смету"
+            className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
+            aria-label="Открыть сохранённую смету"
+          >
+            <FolderOpen className="w-5 h-5" />
+            <span className="hidden sm:inline">Открыть</span>
+          </Button>
+          <Button
+            variant="ghost"
+            onClick={handleSaveClick}
+            title="Сохранить смету"
+            className="rounded-xl hover:text-primary hover:bg-primary/10 touch-manipulation"
+            aria-label="Сохранить смету"
+          >
+            <Save className="w-5 h-5" />
+            <span className="hidden sm:inline">Сохранить</span>
+          </Button>
           <Button
             variant="ghost"
             onClick={handleExport}
-            title="Сохранить PDF"
+            title="Скачать PDF"
             className="rounded-xl hover:text-green-600 hover:bg-green-50 dark:hover:bg-green-950 touch-manipulation"
-            aria-label="Сохранить смету в PDF"
+            aria-label="Скачать смету в PDF"
           >
-            Сохранить
             <Download className="w-5 h-5" />
+            <span className="hidden sm:inline">PDF</span>
           </Button>
           <Button
             variant="ghost"
@@ -232,8 +319,8 @@ export function InvoiceSection() {
             className="rounded-xl hover:text-destructive hover:bg-destructive/10 touch-manipulation"
             aria-label="Очистить смету"
           >
-            Очистить
             <RotateCcw className="w-5 h-5" />
+            <span className="hidden sm:inline">Очистить</span>
           </Button>
         </div>
       </header>
@@ -298,6 +385,12 @@ export function InvoiceSection() {
         cancelText="Отмена"
         onConfirm={handleClearConfirm}
         variant="destructive"
+      />
+
+      <SavedEstimatesDialog
+        open={showSavedDialog}
+        mode={savedDialogMode}
+        onOpenChange={setShowSavedDialog}
       />
     </div>
   );
