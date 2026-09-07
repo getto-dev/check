@@ -1,21 +1,21 @@
 # СантехСчёт Next
 
-Улучшенная версия `getto-dev/check` — offline-first PWA-калькулятор смет на сантехнические работы.
+Refactored offline-first PWA-калькулятор смет на сантехнические работы.
 
-## Что изменено
+## Что улучшено
 
-- строгая TypeScript-проверка на production build;
-- ESLint без массового отключения правил;
-- unit-тесты бизнес-логики;
-- единый version source из `package.json`;
-- версионированный формат файлов смет с валидацией;
-- UUID вместо `Date.now()` как идентификатор позиции;
-- деньги хранятся в целых копейках;
-- `compress/decompress` вынесены в отдельный модуль;
-- упрощённая модель обновления Service Worker;
-- включён React Strict Mode;
-- search index нормализуется заранее;
-- старые сметы остаются импортируемыми по версии формата.
+- строгий TypeScript на build;
+- строгий ESLint без массового отключения правил;
+- unit-тесты бизнес-логики на Bun Test;
+- версия приложения берётся из `package.json` и генерируется в `public/version.json`;
+- версия формата файла сметы проверяется при импорте;
+- сериализация/десериализация сметы вынесена в отдельный модуль;
+- денежные значения хранятся в целых копейках;
+- позиции используют `crypto.randomUUID()`;
+- React Strict Mode включён;
+- поиск работает через нормализацию и заранее подготовленный каталог;
+- Service Worker использует единую версию cache и удаляет старые caches;
+- поддержан GitHub Pages через `NEXT_PUBLIC_BASE_PATH`.
 
 ## Запуск
 
@@ -24,9 +24,16 @@ bun install
 bun run dev
 ```
 
-Production build:
+Проверки:
 
 ```bash
+bun test
+bun run lint
 bun run build
-bun run start
+```
+
+Для GitHub Pages:
+
+```bash
+NEXT_PUBLIC_BASE_PATH=/checknew bun run build
 ```
