@@ -1,3 +1,40 @@
 'use client';
-import {useState} from 'react'; import {Dialog,DialogContent,DialogDescription,DialogHeader,DialogTitle} from './ui/dialog'; import {Button} from './ui/button'; import {useAppStore} from '@/lib/store'; import {formatCurrency} from '@/lib/format';
-export function AddItemModal(){const{modalItem,modalOpen,closeModal,addItem}=useAppStore();const[q,setQ]=useState(1);const[p,setP]=useState(0);if(!modalItem)return null;const price=p||modalItem.priceKopecks;return <Dialog open={modalOpen} onOpenChange={o=>!o&&closeModal()}><DialogContent><DialogHeader><DialogTitle>{modalItem.name}</DialogTitle><DialogDescription>{modalItem.description}</DialogDescription></DialogHeader><div className="grid grid-cols-2 gap-3"><label>Количество<input type="number" min="0.1" step="0.1" value={q} onChange={e=>setQ(Number(e.target.value)||1)}/></label><label>Цена ₽<input type="number" min="0" step="0.01" value={price/100} onChange={e=>setP(Math.round(Number(e.target.value||0)*100))}/></label></div><div className="flex items-center justify-between p-3 rounded-xl bg-muted"><span>Сумма</span><strong>{formatCurrency(Math.round(price*q))}</strong></div><Button onClick={()=>{addItem(modalItem,q,price);closeModal()}}>Добавить</Button></DialogContent></Dialog>}
+
+import { useEffect, useState } from 'react';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
+import { Button } from './ui/button';
+import { useAppStore } from '@/lib/store';
+import { formatCurrency } from '@/lib/format';
+
+export function AddItemModal() {
+  const modalItem = useAppStore((state) => state.modalItem);
+  const modalOpen = useAppStore((state) => state.modalOpen);
+  const closeModal = useAppStore((state) => state.closeModal);
+  const addItem = useAppStore((state) => state.addItem);
+  const [quantity, setQuantity] = useState(1);
+  const [priceKopecks, setPriceKopecks] = useState(0);
+
+  useEffect(() => {
+    if (!modalItem) return;
+    setQuantity(1);
+    setPriceKopecks(0);
+  }, [modalItem]);
+
+  if (!modalItem) return null;
+  const price = priceKopecks || modalItem.priceKopecks;
+
+  return <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>{modalItem.name}</DialogTitle>
+        <DialogDescription>{modalItem.description}</DialogDescription>
+      </DialogHeader>
+      <div className="grid grid-cols-2 gap-3">
+        <label className="space-y-1">Количество<input type="number" min="0.1" step="0.1" value={quantity} onChange={(event) => setQuantity(Math.max(0.1, Number(event.target.value) || 0.1))} /></label>
+        <label className="space-y-1">Цена ₽<input type="number" min="0" step="0.01" value={price / 100} onChange={(event) => setPriceKopecks(Math.max(0, Math.round(Number(event.target.value || 0) * 100)))} /></label>
+      </div>
+      <div className="flex items-center justify-between p-3 rounded-xl bg-muted"><span>Сумма</span><strong>{formatCurrency(Math.round(price * quantity))}</strong></div>
+      <Button type="button" onClick={() => { addItem(modalItem, quantity, price); closeModal(); }}>Добавить</Button>
+    </DialogContent>
+  </Dialog>;
+}
