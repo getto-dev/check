@@ -6,10 +6,9 @@ import type { InvoiceItem, Settings } from './types';
 import { formatCurrency, formatQuantity } from './format';
 import { createEstimateLayout } from './estimate-layout';
 
-const PAGE_WIDTH = 595.28;
-const PAGE_HEIGHT = 841.89;
-const MARGIN_X = 34;
-const TOP = 34;
+const { pageWidth: PAGE_WIDTH, pageHeight: PAGE_HEIGHT, marginX: MARGIN_X, top: TOP, nameRight: NAME_RIGHT, quantityLeft: QTY_LEFT, quantityRight: QTY_RIGHT, priceLeft: PRICE_LEFT, priceRight: PRICE_RIGHT, totalLeft: TOTAL_LEFT, summaryLeft: SUMMARY_LEFT, text: TEXT_SIZES, row: ROW } = {
+  ...createEstimateLayout([], { address: '', discountPercent: 0 }).constants,
+};
 const BLUE = rgb(35 / 255, 136 / 255, 201 / 255);
 const TEXT = rgb(35 / 255, 39 / 255, 43 / 255);
 const MUTED = rgb(105 / 255, 112 / 255, 120 / 255);
@@ -85,118 +84,108 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     }
   };
 
-  const drawTable = (title: string, rows: InvoiceItem[]) => {
+  const drawTable = (rows: InvoiceItem[]) => {
     if (!rows.length) return;
     ensureSpace(72);
 
     const xName = MARGIN_X;
-    const nameRight = 380;
-    const qtyLeft = 380;
-    const qtyRight = 435;
-    const priceLeft = 435;
-    const priceRight = 500;
-    const totalLeft = 500;
-    const totalRight = PAGE_WIDTH - MARGIN_X;
     const right = PAGE_WIDTH - MARGIN_X;
-    const headerLabel = title;
+    const headerLabel = layout.sections.find((section) => section.items === rows)?.title ?? '';
 
     page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
     const headerY = y - 18;
-    text(headerLabel, xName, headerY, 8, MUTED);
-    text('Кол.', centeredTextX(font, 'Кол.', 8, qtyLeft, qtyRight), headerY, 8, MUTED);
-    text('Цена', centeredTextX(font, 'Цена', 8, priceLeft, priceRight), headerY, 8, MUTED);
-    text('Сумма', centeredTextX(font, 'Сумма', 8, totalLeft, totalRight), headerY, 8, MUTED);
+    text(headerLabel, xName, headerY, TEXT_SIZES.section, MUTED);
+    text('Кол.', centeredTextX(font, 'Кол.', TEXT_SIZES.section, QTY_LEFT, QTY_RIGHT), headerY, TEXT_SIZES.section, MUTED);
+    text('Цена', centeredTextX(font, 'Цена', TEXT_SIZES.section, PRICE_LEFT, PRICE_RIGHT), headerY, TEXT_SIZES.section, MUTED);
+    text('Сумма', centeredTextX(font, 'Сумма', TEXT_SIZES.section, TOTAL_LEFT, right), headerY, TEXT_SIZES.section, MUTED);
     y -= 34;
 
     for (const item of rows) {
-      const nameSize = 9;
-      const descriptionSize = 7;
-      const nameLines = wrapText(item.name, font, nameSize, nameRight - xName - 12);
-      const descLines = item.description ? wrapText(item.description, font, descriptionSize, nameRight - xName - 12) : [];
-      const nameLineHeight = 11;
-      const descLineHeight = 9;
-      const contentHeight = nameLines.length * nameLineHeight + descLines.length * descLineHeight;
-      const rowHeight = Math.max(30, contentHeight + 14);
+      const nameLines = wrapText(item.name, font, TEXT_SIZES.name, NAME_RIGHT - xName - 12);
+      const descLines = item.description ? wrapText(item.description, font, TEXT_SIZES.description, NAME_RIGHT - xName - 12) : [];
+      const contentHeight = nameLines.length * ROW.nameLineHeight + descLines.length * ROW.descriptionLineHeight;
+      const rowHeight = Math.max(ROW.minHeight, contentHeight + 14);
       ensureSpace(rowHeight + 8);
 
       const blockTopY = y - 1 - (rowHeight - 8 - contentHeight) / 2;
-      nameLines.forEach((line, index) => text(line, xName, blockTopY - index * nameLineHeight, nameSize));
-      const descStartY = blockTopY - nameLines.length * nameLineHeight - 2;
-      descLines.forEach((line, index) => text(line, xName, descStartY - index * descLineHeight, descriptionSize, MUTED));
+      nameLines.forEach((line, index) => text(line, xName, blockTopY - index * ROW.nameLineHeight, TEXT_SIZES.name));
+      const descStartY = blockTopY - nameLines.length * ROW.nameLineHeight - 2;
+      descLines.forEach((line, index) => text(line, xName, descStartY - index * ROW.descriptionLineHeight, TEXT_SIZES.description, MUTED));
 
       const qty = `${formatQuantity(item.quantity)} ${item.unit}`;
       const price = money(item.priceKopecks);
       const total = money(Math.round(item.priceKopecks * item.quantity));
       const valueY = y - 1 - (rowHeight - 8) / 2 + 3;
-      text(qty, centeredTextX(font, qty, 8, qtyLeft, qtyRight), valueY, 8);
-      text(price, centeredTextX(font, price, 8, priceLeft, priceRight), valueY, 8);
-      text(total, centeredTextX(font, total, 8, totalLeft, totalRight), valueY, 8);
+      text(qty, centeredTextX(font, qty, TEXT_SIZES.values, QTY_LEFT, QTY_RIGHT), valueY, TEXT_SIZES.values);
+      text(price, centeredTextX(font, price, TEXT_SIZES.values, PRICE_LEFT, PRICE_RIGHT), valueY, TEXT_SIZES.values);
+      text(total, centeredTextX(font, total, TEXT_SIZES.values, TOTAL_LEFT, right), valueY, TEXT_SIZES.values);
 
-      const lineY = y - rowHeight + 7;
+      const lastTextY = descLines.length
+        ? descStartY - (descLines.length - 1) * ROW.descriptionLineHeight
+        : blockTopY - (nameLines.length - 1) * ROW.nameLineHeight;
+      const lineY = lastTextY - 7;
       page.drawLine({ start: { x: MARGIN_X, y: lineY }, end: { x: right, y: lineY }, thickness: 0.5, color: BORDER });
       y -= rowHeight;
     }
   };
 
-  const headerY = y;
-  page.drawLine({ start: { x: MARGIN_X, y: headerY }, end: { x: PAGE_WIDTH - MARGIN_X, y: headerY }, thickness: 2, color: BLUE });
+  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: rightOfPage(), y }, thickness: 2, color: BLUE });
   y -= 17;
 
   const documentTitle = `СЧЕТ №${layout.number}`;
-  text(documentTitle, MARGIN_X, y, 10, TEXT);
+  text(documentTitle, MARGIN_X, y, TEXT_SIZES.title, TEXT);
   if (layout.address) {
     const prefix = 'Объект: ';
     const address = layout.address;
-    const objectSize = 8;
-    const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(documentTitle, 10) - 18;
+    const objectSize = TEXT_SIZES.object;
+    const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(documentTitle, TEXT_SIZES.title) - 18;
     const fullObject = `${prefix}${address}`;
     const objectLines = wrapText(fullObject, font, objectSize, Math.max(120, availableWidth));
     const firstLine = objectLines.join(' ');
     const visibleObject = font.widthOfTextAtSize(firstLine, objectSize) <= availableWidth
       ? firstLine
       : `${prefix}${address.slice(0, Math.max(1, Math.floor(address.length * 0.72)))}…`;
-    const titleWidth = font.widthOfTextAtSize(documentTitle, 10);
+    const titleWidth = font.widthOfTextAtSize(documentTitle, TEXT_SIZES.title);
     text(visibleObject, MARGIN_X + titleWidth + 18, y + 1, objectSize, MUTED);
   }
   y -= 13;
 
   for (const section of layout.sections) {
-    drawTable(section.title, section.items);
+    drawTable(section.items);
   }
 
   ensureSpace(65);
   y -= 10;
-  const summaryLeft = 360;
   const summaryRight = PAGE_WIDTH - MARGIN_X;
-  page.drawLine({ start: { x: summaryLeft, y }, end: { x: summaryRight, y }, thickness: 1.5, color: BLUE });
+  page.drawLine({ start: { x: SUMMARY_LEFT, y }, end: { x: summaryRight, y }, thickness: 1.5, color: BLUE });
   y -= 15;
 
   if (layout.showSectionSummary) {
     const serviceValue = money(layout.totals.servicesKopecks);
-    text('Работы:', summaryLeft, y, 8, MUTED);
-    text(serviceValue, rightTextX(font, serviceValue, 8, summaryRight), y, 8);
+    text('Работы:', SUMMARY_LEFT, y, TEXT_SIZES.values, MUTED);
+    text(serviceValue, rightTextX(font, serviceValue, TEXT_SIZES.values, summaryRight), y, TEXT_SIZES.values);
     y -= 13;
 
     const productValue = money(layout.totals.productsKopecks);
-    text('Материалы:', summaryLeft, y, 8, MUTED);
-    text(productValue, rightTextX(font, productValue, 8, summaryRight), y, 8);
+    text('Материалы:', SUMMARY_LEFT, y, TEXT_SIZES.values, MUTED);
+    text(productValue, rightTextX(font, productValue, TEXT_SIZES.values, summaryRight), y, TEXT_SIZES.values);
     y -= 13;
   }
 
   if (layout.totals.discountKopecks > 0) {
-    text(`Скидка ${layout.discountPercent}%:`, summaryLeft, y, 8, MUTED);
+    text(`Скидка ${layout.discountPercent}%:`, SUMMARY_LEFT, y, TEXT_SIZES.values, MUTED);
     const discountValue = `−${money(layout.totals.discountKopecks)}`;
-    text(discountValue, rightTextX(font, discountValue, 8, summaryRight), y, 8);
+    text(discountValue, rightTextX(font, discountValue, TEXT_SIZES.values, summaryRight), y, TEXT_SIZES.values);
     y -= 15;
   } else {
     y -= 2;
   }
 
-  page.drawLine({ start: { x: summaryLeft, y: y + 3 }, end: { x: summaryRight, y: y + 3 }, thickness: 0.7, color: BORDER });
+  page.drawLine({ start: { x: SUMMARY_LEFT, y: y + 3 }, end: { x: summaryRight, y: y + 3 }, thickness: 0.7, color: BORDER });
   y -= 11;
-  text('ИТОГО К ОПЛАТЕ:', summaryLeft, y, 10, BLUE);
+  text('ИТОГО К ОПЛАТЕ:', SUMMARY_LEFT, y, TEXT_SIZES.grandLabel, BLUE);
   const grand = money(layout.totals.grandTotalKopecks);
-  text(grand, rightTextX(font, grand, 13, summaryRight), y - 1, 13, BLUE);
+  text(grand, rightTextX(font, grand, TEXT_SIZES.grandValue, summaryRight), y - 1, TEXT_SIZES.grandValue, BLUE);
 
   const bytes = await pdf.save();
   const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
@@ -212,4 +201,8 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
+
+  function rightOfPage() {
+    return PAGE_WIDTH - MARGIN_X;
+  }
 }
