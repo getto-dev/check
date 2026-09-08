@@ -9,8 +9,13 @@ const items: InvoiceItem[] = [
 
 describe('calculateTotals', () => {
   test('calculates services, products and discount in kopecks', () => {
-    expect(calculateTotals(items, 10)).toEqual({ servicesKopecks: 200000, productsKopecks: 150000, discountKopecks: 20000, grandTotalKopecks: 330000 });
+    const totals = calculateTotals(items, 10);
+    expect(totals.servicesKopecks).toBe(200000);
+    expect(totals.productsKopecks).toBe(150000);
+    expect(totals.discountKopecks).toBe(20000);
+    expect(totals.grandTotalKopecks).toBe(330000);
   });
+
   test('clamps invalid discounts', () => {
     expect(calculateTotals(items, 150).grandTotalKopecks).toBe(150000);
     expect(calculateTotals(items, -10).grandTotalKopecks).toBe(350000);
