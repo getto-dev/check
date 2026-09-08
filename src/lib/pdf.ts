@@ -53,6 +53,14 @@ function money(value: number) {
   return formatCurrency(value).replace(/\u00a0/g, ' ');
 }
 
+function centeredTextX(font: { widthOfTextAtSize: (text: string, size: number) => number }, value: string, size: number, left: number, right: number) {
+  return left + (right - left - font.widthOfTextAtSize(value, size)) / 2;
+}
+
+function rightTextX(font: { widthOfTextAtSize: (text: string, size: number) => number }, value: string, size: number, right: number) {
+  return right - font.widthOfTextAtSize(value, size);
+}
+
 export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   if (typeof window === 'undefined' || !items.length) return;
 
@@ -82,86 +90,104 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
 
   const drawTable = (title: string, rows: InvoiceItem[]) => {
     if (!rows.length) return;
-    ensureSpace(100);
-    text(title, MARGIN_X, y, 11, BLUE);
-    y -= 17;
+    ensureSpace(86);
+    text(title, MARGIN_X, y, 10, BLUE);
+    y -= 14;
 
     const xName = MARGIN_X;
-    const xQty = 390;
-    const xPrice = 456;
-    const xTotal = 526;
+    const nameRight = 380;
+    const qtyLeft = 380;
+    const qtyRight = 435;
+    const priceLeft = 435;
+    const priceRight = 500;
+    const totalLeft = 500;
+    const totalRight = PAGE_WIDTH - MARGIN_X;
     const right = PAGE_WIDTH - MARGIN_X;
-    page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
-    text('Наименование', xName, y - 19, 8, MUTED);
-    text('Кол.', xQty, y - 19, 8, MUTED);
-    text('Цена', xPrice, y - 19, 8, MUTED);
-    text('Всего', xTotal, y - 19, 8, MUTED);
-    y -= 34;
+
+    page.drawLine({ start: { x: MARGIN_X, y: y - 3 }, end: { x: right, y: y - 3 }, thickness: 1, color: BLUE });
+    text('Наименование', xName, y - 17, 8, MUTED);
+    text('Кол.', centeredTextX(font, 'Кол.', 8, qtyLeft, qtyRight), y - 17, 8, MUTED);
+    text('Цена', centeredTextX(font, 'Цена', 8, priceLeft, priceRight), y - 17, 8, MUTED);
+    text('Сумма', centeredTextX(font, 'Сумма', 8, totalLeft, totalRight), y - 17, 8, MUTED);
+    y -= 31;
 
     for (const item of rows) {
       const nameSize = 9;
       const descriptionSize = 7;
-      const nameLines = wrapText(item.name, font, nameSize, xQty - xName - 14);
-      const descLines = item.description ? wrapText(item.description, font, descriptionSize, xQty - xName - 14) : [];
-      const lineHeight = 12;
-      const rowHeight = Math.max(29, (nameLines.length + descLines.length) * lineHeight + 10);
-      ensureSpace(rowHeight + 8);
+      const nameLines = wrapText(item.name, font, nameSize, nameRight - xName - 12);
+      const descLines = item.description ? wrapText(item.description, font, descriptionSize, nameRight - xName - 12) : [];
+      const lineHeight = 11;
+      const contentLines = nameLines.length + descLines.length;
+      const rowHeight = Math.max(25, contentLines * lineHeight + 8);
+      ensureSpace(rowHeight + 6);
 
       nameLines.forEach((line, index) => text(line, xName, y - index * lineHeight, nameSize));
-      descLines.forEach((line, index) => text(line, xName, y - (nameLines.length + index) * 10 - 2, descriptionSize, MUTED));
+      descLines.forEach((line, index) => text(line, xName, y - (nameLines.length + index) * 9 - 1, descriptionSize, MUTED));
+
       const qty = `${formatQuantity(item.quantity)} ${item.unit}`;
-      const qtyX = xQty + 30 - font.widthOfTextAtSize(qty, 8) / 2;
-      text(qty, qtyX, y, 8);
       const price = money(item.priceKopecks);
       const total = money(Math.round(item.priceKopecks * item.quantity));
-      text(price, xPrice, y, 8);
-      text(total, xTotal, y, 8);
-      page.drawLine({ start: { x: MARGIN_X, y: y - rowHeight + 8 }, end: { x: right, y: y - rowHeight + 8 }, thickness: 0.5, color: BORDER });
+      const baseY = y;
+      text(qty, centeredTextX(font, qty, 8, qtyLeft, qtyRight), baseY, 8);
+      text(price, centeredTextX(font, price, 8, priceLeft, priceRight), baseY, 8);
+      text(total, centeredTextX(font, total, 8, totalLeft, totalRight), baseY, 8);
+
+      page.drawLine({ start: { x: MARGIN_X, y: y - rowHeight + 6 }, end: { x: right, y: y - rowHeight + 6 }, thickness: 0.5, color: BORDER });
       y -= rowHeight;
     }
-
-    const subtotal = rows.reduce((sum, item) => sum + Math.round(item.priceKopecks * item.quantity), 0);
-    ensureSpace(24);
-    const label = title === 'РАБОТЫ И УСЛУГИ' ? 'Итого за услуги' : 'Итого за материалы';
-    const value = money(subtotal);
-    text(label, xPrice - 48, y - 2, 8, MUTED);
-    text(value, xTotal, y - 2, 8);
-    y -= 23;
   };
 
-  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: PAGE_WIDTH - MARGIN_X, y }, thickness: 3, color: BLUE });
-  y -= 25;
-  text(`СЧЕТ №${number}`, MARGIN_X, y, 20);
-  y -= 19;
-  text('СантехСчёт', MARGIN_X, y, 9, MUTED);
-  const objectLabel = 'ОБЪЕКТ:';
-  text(objectLabel, 365, y, 8, MUTED);
-  const object = settings.address || 'объект не указан';
-  const objectLines = wrapText(object, font, 8, PAGE_WIDTH - MARGIN_X - 365);
-  objectLines.slice(0, 3).forEach((line, index) => text(line, 416, y - index * 10, 8));
-  y -= Math.max(30, objectLines.slice(0, 3).length * 10 + 13);
+  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: PAGE_WIDTH - MARGIN_X, y }, thickness: 2, color: BLUE });
+  y -= 18;
+  text(`СЧЕТ №${number}`, MARGIN_X, y, 17);
+  y -= 16;
+  if (settings.address.trim()) {
+    const object = `Объект: ${settings.address.trim()}`;
+    const objectLines = wrapText(object, font, 8, PAGE_WIDTH - MARGIN_X * 2);
+    objectLines.slice(0, 2).forEach((line, index) => text(line, MARGIN_X, y - index * 10, 8, MUTED));
+    y -= objectLines.slice(0, 2).length * 10 + 8;
+  } else {
+    y -= 5;
+  }
 
   drawTable('РАБОТЫ И УСЛУГИ', services);
   drawTable('МАТЕРИАЛЫ И ТОВАРЫ', products);
 
-  ensureSpace(80);
-  y -= 9;
-  page.drawLine({ start: { x: 360, y }, end: { x: PAGE_WIDTH - MARGIN_X, y }, thickness: 2, color: BLUE });
-  y -= 19;
-  text('Работы', 360, y, 9, MUTED);
-  text(money(totals.servicesKopecks), 470, y, 9);
+  ensureSpace(65);
+  y -= 10;
+  const summaryLeft = 360;
+  const summaryRight = PAGE_WIDTH - MARGIN_X;
+  page.drawLine({ start: { x: summaryLeft, y }, end: { x: summaryRight, y }, thickness: 1.5, color: BLUE });
   y -= 15;
-  text('Материалы', 360, y, 9, MUTED);
-  text(money(totals.productsKopecks), 470, y, 9);
-  if (totals.discountKopecks > 0) {
-    y -= 15;
-    text(`Скидка ${settings.discount}%`, 360, y, 9, MUTED);
-    text(`−${money(totals.discountKopecks)}`, 470, y, 9);
+
+  if (services.length) {
+    text('Работы:', summaryLeft, y, 8, MUTED);
+    const serviceValue = money(totals.servicesKopecks);
+    text(serviceValue, rightTextX(font, serviceValue, 8, summaryRight), y, 8);
+    y -= 13;
   }
-  y -= 24;
-  text('ИТОГО К ОПЛАТЕ:', 360, y, 11, BLUE);
+
+  if (products.length) {
+    text('Материалы:', summaryLeft, y, 8, MUTED);
+    const productValue = money(totals.productsKopecks);
+    text(productValue, rightTextX(font, productValue, 8, summaryRight), y, 8);
+    y -= 13;
+  }
+
+  if (totals.discountKopecks > 0) {
+    text(`Скидка ${settings.discount}%:`, summaryLeft, y, 8, MUTED);
+    const discountValue = `−${money(totals.discountKopecks)}`;
+    text(discountValue, rightTextX(font, discountValue, 8, summaryRight), y, 8);
+    y -= 15;
+  } else {
+    y -= 2;
+  }
+
+  page.drawLine({ start: { x: summaryLeft, y: y + 3 }, end: { x: summaryRight, y: y + 3 }, thickness: 0.7, color: BORDER });
+  y -= 11;
+  text('ИТОГО К ОПЛАТЕ:', summaryLeft, y, 10, BLUE);
   const grand = money(totals.grandTotalKopecks);
-  text(grand, PAGE_WIDTH - MARGIN_X - font.widthOfTextAtSize(grand, 14), y - 1, 14, BLUE);
+  text(grand, rightTextX(font, grand, 13, summaryRight), y - 1, 13, BLUE);
 
   const bytes = await pdf.save();
   const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
