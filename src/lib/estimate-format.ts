@@ -1,6 +1,7 @@
 import type { EstimateFileV1, InvoiceItem, Settings } from './types';
 import { formatCurrency, formatQuantity } from './format';
 import { createEstimateLayout } from './estimate-layout';
+import { ESTIMATE_LAYOUT, MAX_DISCOUNT_PERCENT } from './constants';
 
 export class EstimateFileError extends Error {
   constructor(message: string) {
@@ -66,7 +67,7 @@ const parse = (raw: unknown): EstimateFileV1 => {
       : 0;
   const settings: Settings = {
     address: sourceSettings.address,
-    discountPercent: Math.max(0, Math.min(50, legacyDiscount)),
+    discountPercent: Math.max(0, Math.min(MAX_DISCOUNT_PERCENT, legacyDiscount)),
   };
   return {
     version: 1,
@@ -102,8 +103,8 @@ async function getEmbeddedFont(): Promise<string> {
   return cachedFontDataPromise;
 }
 
-const buildStyles = (layout: ReturnType<typeof createEstimateLayout>) => {
-  const c = layout.constants;
+const buildStyles = () => {
+  const c = ESTIMATE_LAYOUT;
   const contentWidth = c.pageWidth - c.marginX * 2;
   const nameWidth = c.nameRight - c.marginX;
   const quantityWidth = c.quantityRight - c.quantityLeft;
@@ -181,7 +182,7 @@ export const serializeEstimate = async (items: InvoiceItem[], settings: Settings
   const discountHtml = layout.totals.discountKopecks > 0
     ? `<div class="summary-row"><span>Скидка ${esc(String(layout.discountPercent))}%:</span><span>−${esc(money(layout.totals.discountKopecks))}</span></div>`
     : '';
-  const styles = buildStyles(layout);
+  const styles = buildStyles();
 
   return `<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Смета ${esc(layout.number)}</title><style>@font-face{font-family:Roboto;src:url('${fontData}') format('woff');font-weight:400;font-style:normal;} ${styles}</style></head><body><main class="estimate-page"><div class="header-line"></div><div class="document-title"><span class="document-number">СЧЕТ №${esc(layout.number)}</span>${objectHtml}</div>${sectionsHtml}<div class="summary"><div class="summary-top-line"></div>${summaryLines}${discountHtml}<div class="summary-divider"></div><div class="grand-total"><span class="grand-total-label">ИТОГО К ОПЛАТЕ:</span><span class="grand-total-value">${esc(money(layout.totals.grandTotalKopecks))}</span></div></div><script type="application/json" id="${SCRIPT_ID}">${safeJson(JSON.stringify(data))}</script></main></body></html>`;
 };
