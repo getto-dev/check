@@ -21,11 +21,9 @@ interface State {
   addCatalogItem: (item: CatalogItem, qty?: number) => void;
   addManualItem: (item: Omit<InvoiceItem, 'id'>) => void;
   updateQuantity: (id: string, quantity: number) => void;
-  setQuantity: (id: string, quantity: number) => void;
   removeItem: (id: string) => void;
   clearItems: () => void;
-  clear: () => void;
-  updateSettings: (settings: Partial<Settings> & { discount?: number; discountPercent?: number }) => void;
+  updateSettings: (settings: Partial<Settings> & { discount?: number }) => void;
   setTab: (tab: TabType) => void;
   setCategory: (category: string | null) => void;
   setSearchQuery: (query: string) => void;
@@ -41,15 +39,11 @@ interface State {
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
 
-const normalizeSettings = (settings: Partial<Settings> & { discount?: number; discountPercent?: number }): Settings => {
-  const legacyDiscount = typeof settings.discountPercent === 'number'
-    ? settings.discountPercent
-    : typeof settings.discount === 'number'
-      ? settings.discount
-      : 0;
+const normalizeSettings = (settings: Partial<Settings> & { discount?: number }): Settings => {
+  const discountPercent = typeof settings.discount === 'number' ? settings.discount : settings.discountPercent;
   return {
     address: typeof settings.address === 'string' ? settings.address : '',
-    discountPercent: clamp(Number(legacyDiscount) || 0, 0, MAX_DISCOUNT_PERCENT),
+    discountPercent: clamp(Number(discountPercent) || 0, 0, MAX_DISCOUNT_PERCENT),
   };
 };
 
@@ -74,15 +68,9 @@ export const useAppStore = create<State>()(
             && entry.priceKopecks === priceKopecks
             && entry.type === 'service',
         );
-
         if (existing) {
-          return {
-            items: state.items.map((entry) => entry.id === existing.id
-              ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) }
-              : entry),
-          };
+          return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) } : entry) };
         }
-
         return {
           items: [...state.items, {
             id: crypto.randomUUID(),
@@ -99,24 +87,12 @@ export const useAppStore = create<State>()(
       }),
 
       addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
-      addManualItem: (item) => set((state) => ({
-        items: [...state.items, { ...item, id: crypto.randomUUID() }],
-      })),
-      updateQuantity: (id, quantity) => set((state) => ({
-        items: state.items.map((item) => item.id === id
-          ? { ...item, quantity: normalizeQuantity(quantity) }
-          : item),
-      })),
-      setQuantity: (id, quantity) => get().updateQuantity(id, quantity),
+      addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, id: crypto.randomUUID() }] })),
+      updateQuantity: (id, quantity) => set((state) => ({ items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity) } : item) })),
       removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clearItems: () => set({ items: [] }),
-      clear: () => set({ items: [] }),
 
-      updateSettings: (patch) => set((state) => {
-        const next = { ...state.settings, ...normalizeSettings({ ...state.settings, ...patch }) };
-        return { settings: normalizeSettings({ ...next, ...patch }) };
-      }),
-
+      updateSettings: (patch) => set((state) => ({ settings: normalizeSettings({ ...state.settings, ...patch }) })),
       setTab: (tab) => set({ currentTab: tab }),
       setCategory: (category) => set({ selectedCategory: category }),
       setSearchQuery: (query) => set({ searchQuery: query }),
@@ -149,12 +125,7 @@ export const useAppStore = create<State>()(
 
 export const haptic = (type: 'light' | 'medium' | 'success' | 'error' = 'light') => {
   if (typeof window === 'undefined' || !('vibrate' in navigator)) return;
-  const patterns = {
-    light: [10],
-    medium: [20],
-    success: [10, 50, 10],
-    error: [50, 50, 50],
-  };
+  const patterns = { light: [10], medium: [20], success: [10, 50, 10], error: [50, 50, 50] };
   navigator.vibrate(patterns[type]);
 };
 
