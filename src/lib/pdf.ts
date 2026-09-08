@@ -164,7 +164,8 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   text(grand, PAGE_WIDTH - MARGIN_X - font.widthOfTextAtSize(grand, 14), y - 1, 14, BLUE);
 
   const bytes = await pdf.save();
-  const blob = new Blob([bytes], { type: 'application/pdf' });
+  const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
+  const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
   const filename = `Smeta_${number}.pdf`;
   const anchor = document.createElement('a');
