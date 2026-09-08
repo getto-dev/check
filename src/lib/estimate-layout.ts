@@ -30,6 +30,10 @@ export function createEstimateLayout(items: InvoiceItem[], settings: Settings, n
   const hasServices = services.length > 0;
   const hasProducts = products.length > 0;
   const hasBothTypes = hasServices && hasProducts;
+  const sections: EstimateLayoutSection[] = [
+    { type: 'service', title: 'Наименование работ и услуг', items: services },
+    { type: 'product', title: 'Наименование материалов и товаров', items: products },
+  ].filter((section) => section.items.length > 0);
 
   return {
     number,
@@ -37,10 +41,7 @@ export function createEstimateLayout(items: InvoiceItem[], settings: Settings, n
     items,
     services,
     products,
-    sections: [
-      { type: 'service', title: 'Наименование работ и услуг', items: services },
-      { type: 'product', title: 'Наименование материалов и товаров', items: products },
-    ].filter((section) => section.items.length),
+    sections,
     totals,
     discountPercent: settings.discount,
     hasServices,
