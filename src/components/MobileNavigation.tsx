@@ -26,8 +26,8 @@ export function MobileNavigation() {
   const hasCurrentEstimate = itemCount > 0;
 
   const handleTabClick = (tab: TabType) => {
-    if (tab === 'invoice' || tab === 'settings') {
-      setTab(currentTab === tab ? 'catalog' : tab);
+    if (tab === 'invoice') {
+      setTab(currentTab === 'invoice' ? 'catalog' : 'invoice');
       return;
     }
     setTab(tab);
