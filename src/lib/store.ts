@@ -1,16 +1,166 @@
 'use client';
-import { create } from 'zustand'; import { persist,createJSONStorage } from 'zustand/middleware'; import type { CatalogItem,InvoiceItem,Settings,ThemeMode,TabType } from './types'; import { calculateTotals } from './format';
-interface State {items:InvoiceItem[];settings:Settings;themeMode:ThemeMode;currentTab:TabType;selectedCategory:string|null;searchQuery:string;modalItem:CatalogItem|null;modalOpen:boolean;manualType:'service'|'product';hydrated:boolean;addItem:(item:CatalogItem,qty?:number,priceKopecks?:number)=>void;addCatalogItem:(item:CatalogItem,qty?:number)=>void;addManualItem:(item:Omit<InvoiceItem,'id'>)=>void;updateQuantity:(id:string,q:number)=>void;setQuantity:(id:string,q:number)=>void;removeItem:(id:string)=>void;clearItems:()=>void;clear:()=>void;updateSettings:(s:Partial<Settings>)=>void;setTab:(t:TabType)=>void;setCategory:(c:string|null)=>void;setSearchQuery:(q:string)=>void;openModal:(i:CatalogItem)=>void;closeModal:()=>void;setManualType:(t:'service'|'product')=>void;setThemeMode:(m:ThemeMode)=>void;setHydrated:(v:boolean)=>void;calculateTotals:()=>ReturnType<typeof calculateTotals>;loadEstimateData:(items:InvoiceItem[],settings:Settings)=>void}
-const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
-export const useAppStore=create<State>()(persist((set,get)=>({items:[],settings:{address:'',discount:0,discountPercent:0},themeMode:'system',currentTab:'catalog',selectedCategory:null,searchQuery:'',modalItem:null,modalOpen:false,manualType:'service',hydrated:false,
- addItem:(item,qty=1,priceKopecks=item.priceKopecks)=>set(s=>{const quantity=Math.max(.1,Math.round(qty*100)/100);const existing=s.items.find(x=>x.catalogId===item.id&&x.priceKopecks===priceKopecks);if(existing)return{items:s.items.map(x=>x.id===existing.id?{...x,quantity}:x)};return{items:[...s.items,{id:crypto.randomUUID(),catalogId:item.id,name:item.name,description:item.description,quantity,priceKopecks,unit:item.unit,type:'service',categoryId:item.categoryId}]}}),
- addCatalogItem:(item,qty=1)=>get().addItem(item,qty),
- addManualItem:item=>set(s=>({items:[...s.items,{...item,id:crypto.randomUUID()}]})),
- updateQuantity:(id,q)=>set(s=>({items:s.items.map(x=>x.id===id?{...x,quantity:Math.max(.1,Math.round(q*100)/100)}:x)})),
- setQuantity:(id,q)=>get().updateQuantity(id,q), removeItem:id=>set(s=>({items:s.items.filter(x=>x.id!==id)})), clearItems:()=>set({items:[]}), clear:()=>set({items:[]}),
- updateSettings:patch=>set(s=>{const next={...s.settings,...patch};if('discount' in patch)next.discount=clamp(Number(patch.discount)||0,0,50),next.discountPercent=next.discount;if('discountPercent' in patch)next.discountPercent=clamp(Number(patch.discountPercent)||0,0,50),next.discount=next.discountPercent;return{settings:next}}),
- setTab:t=>set({currentTab:t}),setCategory:c=>set({selectedCategory:c}),setSearchQuery:q=>set({searchQuery:q}),openModal:i=>set({modalItem:i,modalOpen:true}),closeModal:()=>set({modalItem:null,modalOpen:false}),setManualType:t=>set({manualType:t}),setThemeMode:m=>set({themeMode:m}),setHydrated:v=>set({hydrated:v}),calculateTotals:()=>calculateTotals(get().items,get().settings.discount),loadEstimateData:(items,settings)=>set({items,settings:{...settings,discount:settings.discount??settings.discountPercent??0,discountPercent:settings.discountPercent??settings.discount??0}})
-}),{name:'santehschet-storage-v3',storage:createJSONStorage(()=>localStorage),partialize:s=>({items:s.items,settings:s.settings,themeMode:s.themeMode}),onRehydrateStorage:()=>state=>{state?.setHydrated(true)}}));
-export const haptic=(type:'light'|'medium'|'success'|'error'='light')=>{if(typeof window==='undefined'||!('vibrate'in navigator))return;const p={light:[10],medium:[20],success:[10,50,10],error:[50,50,50]};navigator.vibrate(p[type])};
-export { formatCurrency,formatQuantity } from './format';
-export const exportToPdf=async(items:InvoiceItem[],settings:Settings)=>{const {exportToPdf:pdf}=await import('./pdf');return pdf(items,settings)};
+
+import { create } from 'zustand';
+import { createJSONStorage, persist } from 'zustand/middleware';
+import type { CatalogItem, InvoiceItem, Settings, ThemeMode, TabType } from './types';
+import { calculateTotals } from './format';
+import { MAX_DISCOUNT_PERCENT } from './constants';
+
+interface State {
+  items: InvoiceItem[];
+  settings: Settings;
+  themeMode: ThemeMode;
+  currentTab: TabType;
+  selectedCategory: string | null;
+  searchQuery: string;
+  modalItem: CatalogItem | null;
+  modalOpen: boolean;
+  manualType: 'service' | 'product';
+  hydrated: boolean;
+  addItem: (item: CatalogItem, qty?: number, priceKopecks?: number) => void;
+  addCatalogItem: (item: CatalogItem, qty?: number) => void;
+  addManualItem: (item: Omit<InvoiceItem, 'id'>) => void;
+  updateQuantity: (id: string, quantity: number) => void;
+  setQuantity: (id: string, quantity: number) => void;
+  removeItem: (id: string) => void;
+  clearItems: () => void;
+  clear: () => void;
+  updateSettings: (settings: Partial<Settings> & { discount?: number; discountPercent?: number }) => void;
+  setTab: (tab: TabType) => void;
+  setCategory: (category: string | null) => void;
+  setSearchQuery: (query: string) => void;
+  openModal: (item: CatalogItem) => void;
+  closeModal: () => void;
+  setManualType: (type: 'service' | 'product') => void;
+  setThemeMode: (mode: ThemeMode) => void;
+  setHydrated: (value: boolean) => void;
+  calculateTotals: () => ReturnType<typeof calculateTotals>;
+  loadEstimateData: (items: InvoiceItem[], settings: Settings) => void;
+}
+
+const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
+const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
+
+const normalizeSettings = (settings: Partial<Settings> & { discount?: number; discountPercent?: number }): Settings => {
+  const legacyDiscount = typeof settings.discountPercent === 'number'
+    ? settings.discountPercent
+    : typeof settings.discount === 'number'
+      ? settings.discount
+      : 0;
+  return {
+    address: typeof settings.address === 'string' ? settings.address : '',
+    discountPercent: clamp(Number(legacyDiscount) || 0, 0, MAX_DISCOUNT_PERCENT),
+  };
+};
+
+export const useAppStore = create<State>()(
+  persist(
+    (set, get) => ({
+      items: [],
+      settings: { address: '', discountPercent: 0 },
+      themeMode: 'system',
+      currentTab: 'catalog',
+      selectedCategory: null,
+      searchQuery: '',
+      modalItem: null,
+      modalOpen: false,
+      manualType: 'service',
+      hydrated: false,
+
+      addItem: (item, qty = 1, priceKopecks = item.priceKopecks) => set((state) => {
+        const quantity = normalizeQuantity(qty);
+        const existing = state.items.find(
+          (entry) => entry.catalogId === item.id
+            && entry.priceKopecks === priceKopecks
+            && entry.type === 'service',
+        );
+
+        if (existing) {
+          return {
+            items: state.items.map((entry) => entry.id === existing.id
+              ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) }
+              : entry),
+          };
+        }
+
+        return {
+          items: [...state.items, {
+            id: crypto.randomUUID(),
+            catalogId: item.id,
+            name: item.name,
+            description: item.description,
+            quantity,
+            priceKopecks,
+            unit: item.unit,
+            type: 'service',
+            categoryId: item.categoryId,
+          }],
+        };
+      }),
+
+      addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
+      addManualItem: (item) => set((state) => ({
+        items: [...state.items, { ...item, id: crypto.randomUUID() }],
+      })),
+      updateQuantity: (id, quantity) => set((state) => ({
+        items: state.items.map((item) => item.id === id
+          ? { ...item, quantity: normalizeQuantity(quantity) }
+          : item),
+      })),
+      setQuantity: (id, quantity) => get().updateQuantity(id, quantity),
+      removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
+      clearItems: () => set({ items: [] }),
+      clear: () => set({ items: [] }),
+
+      updateSettings: (patch) => set((state) => {
+        const next = { ...state.settings, ...normalizeSettings({ ...state.settings, ...patch }) };
+        return { settings: normalizeSettings({ ...next, ...patch }) };
+      }),
+
+      setTab: (tab) => set({ currentTab: tab }),
+      setCategory: (category) => set({ selectedCategory: category }),
+      setSearchQuery: (query) => set({ searchQuery: query }),
+      openModal: (item) => set({ modalItem: item, modalOpen: true }),
+      closeModal: () => set({ modalItem: null, modalOpen: false }),
+      setManualType: (type) => set({ manualType: type }),
+      setThemeMode: (mode) => set({ themeMode: mode }),
+      setHydrated: (value) => set({ hydrated: value }),
+      calculateTotals: () => calculateTotals(get().items, get().settings.discountPercent),
+      loadEstimateData: (items, settings) => set({ items, settings: normalizeSettings(settings) }),
+    }),
+    {
+      name: 'santehschet-storage-v3',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ items: state.items, settings: state.settings, themeMode: state.themeMode }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<State> | undefined;
+        return {
+          ...currentState,
+          ...persisted,
+          settings: normalizeSettings(persisted?.settings ?? currentState.settings),
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
+    },
+  ),
+);
+
+export const haptic = (type: 'light' | 'medium' | 'success' | 'error' = 'light') => {
+  if (typeof window === 'undefined' || !('vibrate' in navigator)) return;
+  const patterns = {
+    light: [10],
+    medium: [20],
+    success: [10, 50, 10],
+    error: [50, 50, 50],
+  };
+  navigator.vibrate(patterns[type]);
+};
+
+export { formatCurrency, formatQuantity } from './format';
+
+export const exportToPdf = async (items: InvoiceItem[], settings: Settings) => {
+  const { exportToPdf: pdf } = await import('./pdf');
+  return pdf(items, settings);
+};
