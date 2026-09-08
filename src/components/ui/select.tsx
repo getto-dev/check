@@ -1,5 +1,8 @@
 'use client';
-import * as SelectPrimitive from '@radix-ui/react-select'; import { ChevronDown,Check } from 'lucide-react'; import { cn } from '@/lib/utils';
+import * as React from 'react';
+import * as SelectPrimitive from '@radix-ui/react-select';
+import { ChevronDown, Check } from 'lucide-react';
+import { cn } from '@/lib/utils';
 export const Select=SelectPrimitive.Root; export const SelectValue=SelectPrimitive.Value;
 export function SelectTrigger({className,...props}:React.ComponentProps<typeof SelectPrimitive.Trigger>){return <SelectPrimitive.Trigger className={cn('flex h-10 w-full items-center justify-between rounded-md border bg-background px-3 py-2 text-sm',className)} {...props}><SelectPrimitive.Icon><ChevronDown className="h-4 w-4"/></SelectPrimitive.Icon></SelectPrimitive.Trigger>}
 export function SelectContent({className,...props}:React.ComponentProps<typeof SelectPrimitive.Content>){return <SelectPrimitive.Portal><SelectPrimitive.Content className={cn('z-50 min-w-[8rem] overflow-hidden rounded-md border bg-popover text-popover-foreground shadow-md',className)} {...props}/></SelectPrimitive.Portal>}
