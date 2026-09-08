@@ -105,12 +105,13 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
       ? 'Наименование работ и услуг'
       : 'Наименование материалов и товаров';
 
-    page.drawLine({ start: { x: MARGIN_X, y: y - 3 }, end: { x: right, y: y - 3 }, thickness: 1, color: BLUE });
-    text(headerLabel, xName, y - 17, 8, MUTED);
-    text('Кол.', centeredTextX(font, 'Кол.', 8, qtyLeft, qtyRight), y - 17, 8, MUTED);
-    text('Цена', centeredTextX(font, 'Цена', 8, priceLeft, priceRight), y - 17, 8, MUTED);
-    text('Сумма', centeredTextX(font, 'Сумма', 8, totalLeft, totalRight), y - 17, 8, MUTED);
-    y -= 31;
+    page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
+    const headerY = y - 18;
+    text(headerLabel, xName, headerY, 8, MUTED);
+    text('Кол.', centeredTextX(font, 'Кол.', 8, qtyLeft, qtyRight), headerY, 8, MUTED);
+    text('Цена', centeredTextX(font, 'Цена', 8, priceLeft, priceRight), headerY, 8, MUTED);
+    text('Сумма', centeredTextX(font, 'Сумма', 8, totalLeft, totalRight), headerY, 8, MUTED);
+    y -= 34;
 
     for (const item of rows) {
       const nameSize = 9;
@@ -120,23 +121,23 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
       const nameLineHeight = 11;
       const descLineHeight = 9;
       const contentHeight = nameLines.length * nameLineHeight + descLines.length * descLineHeight;
-      const rowHeight = Math.max(28, contentHeight + 12);
-      ensureSpace(rowHeight + 6);
+      const rowHeight = Math.max(30, contentHeight + 14);
+      ensureSpace(rowHeight + 8);
 
-      const blockTopY = y + (rowHeight - 6 - contentHeight) / 2;
+      const blockTopY = y - 1 - (rowHeight - 8 - contentHeight) / 2;
       nameLines.forEach((line, index) => text(line, xName, blockTopY - index * nameLineHeight, nameSize));
-      const descStartY = blockTopY - nameLines.length * nameLineHeight - 1;
+      const descStartY = blockTopY - nameLines.length * nameLineHeight - 2;
       descLines.forEach((line, index) => text(line, xName, descStartY - index * descLineHeight, descriptionSize, MUTED));
 
       const qty = `${formatQuantity(item.quantity)} ${item.unit}`;
       const price = money(item.priceKopecks);
       const total = money(Math.round(item.priceKopecks * item.quantity));
-      const valueY = y - (rowHeight - 6) / 2 + 3;
+      const valueY = y - 1 - (rowHeight - 8) / 2 + 3;
       text(qty, centeredTextX(font, qty, 8, qtyLeft, qtyRight), valueY, 8);
       text(price, centeredTextX(font, price, 8, priceLeft, priceRight), valueY, 8);
       text(total, centeredTextX(font, total, 8, totalLeft, totalRight), valueY, 8);
 
-      const lineY = y - rowHeight + 6;
+      const lineY = y - rowHeight + 7;
       page.drawLine({ start: { x: MARGIN_X, y: lineY }, end: { x: right, y: lineY }, thickness: 0.5, color: BORDER });
       y -= rowHeight;
     }
