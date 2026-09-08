@@ -39,13 +39,18 @@
 }
 
 * { box-sizing: border-box; }
-html { min-height: 100%; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--color-background); color: var(--color-foreground); }
-body { min-height: 100dvh; margin: 0; background: var(--color-background); color: var(--color-foreground); }
+html { min-height: 100%; font-family: Inter, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; background: var(--color-background); color: var(--color-foreground); overflow-x: hidden; }
+body { min-height: 100dvh; margin: 0; background: var(--color-background); color: var(--color-foreground); overflow-x: hidden; -webkit-text-size-adjust: 100%; }
 button, input, select { font: inherit; }
-button { cursor: pointer; }
+button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
+input, select { min-width: 0; }
+input[type="search"] { -webkit-appearance: none; appearance: none; }
+input[type="number"] { -moz-appearance: textfield; }
+input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { margin: 0; }
 .gradient-bg { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
 .gradient-text { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .safe-top { padding-top: max(0.625rem, env(safe-area-inset-top)); }
+.safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 .icon-button { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 0.625rem; background: var(--color-card); color: var(--color-foreground); }
 .icon-button:hover { border-color: var(--color-primary); color: var(--color-primary); }
 .button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground); padding: 0.625rem 0.875rem; border-radius: 0.75rem; font-weight: 600; }
