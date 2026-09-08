@@ -39,9 +39,12 @@ const settings: Settings = {
 };
 
 const extractJson = (html: string) => {
-  const match = html.match(/<script[^>]*id=["']estimate-data["'][^>]*>([\\s\\S]*?)<\\/script>/i);
-  expect(match?.[1]).toBeTruthy();
-  return JSON.parse(match![1].replaceAll('<\\/script', '</script').replaceAll('<\\!--', '<!--'));
+  const startTag = '<script type="application/json" id="estimate-data">';
+  const start = html.indexOf(startTag);
+  const end = html.indexOf('</script>', start);
+  expect(start).toBeGreaterThanOrEqual(0);
+  expect(end).toBeGreaterThan(start);
+  return JSON.parse(html.slice(start + startTag.length, end).replaceAll('<\\/script', '</script').replaceAll('<\\!--', '<!--'));
 };
 
 describe('estimate integration', () => {
@@ -86,15 +89,15 @@ describe('estimate integration', () => {
   });
 
   test('normalizes whitespace and clamps imported discounts without changing items', async () => {
-    const html = await serializeEstimate(items, { ...settings, discountPercent: 17 }, 'Смета');
+    const html = await serializeEstimate(items, settings, 'Смета');
     const data = extractJson(html);
     data.settings.address = '  Объект 42   ';
     data.settings.discountPercent = 999;
 
-    const editedHtml = html.replace(
-      /(<script[^>]*id=["']estimate-data["'][^>]*>)[\\s\\S]*?(<\\/script>)/i,
-      `$1${JSON.stringify(data)}$2`,
-    );
+    const startTag = '<script type="application/json" id="estimate-data">';
+    const start = html.indexOf(startTag);
+    const end = html.indexOf('</script>', start);
+    const editedHtml = `${html.slice(0, start + startTag.length)}${JSON.stringify(data)}${html.slice(end)}`;
     const imported = await loadEstimateFromFile(new File([editedHtml], 'estimate.html'));
 
     expect(imported.settings).toEqual({
@@ -106,7 +109,7 @@ describe('estimate integration', () => {
 
   test('rejects malformed, wrong-app and invalid-item estimates', async () => {
     const makeFile = (value: unknown) => new File([
-      `<!doctype html><script id="estimate-data" type="application/json">${JSON.stringify(value)}</script>`,
+      `<!doctype html><script type="application/json" id="estimate-data">${JSON.stringify(value)}</script>`,
     ], 'estimate.html');
 
     await expect(loadEstimateFromFile(makeFile({ version: 2, app: 'santeh-schet' }))).rejects.toThrow(EstimateFileError);
