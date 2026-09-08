@@ -81,6 +81,7 @@ const parse = (raw: unknown): EstimateFileV1 => {
 const money = (value: number) => formatCurrency(value).replace(/\u00a0/g, ' ');
 
 async function getEmbeddedFont(): Promise<string> {
+  if (typeof window === 'undefined') return '';
   if (!cachedFontDataPromise) {
     cachedFontDataPromise = fetch(FONT_PATH, { cache: 'force-cache' })
       .then(async (response) => {
