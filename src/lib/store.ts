@@ -39,7 +39,7 @@ interface State {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
-const quantityStep = (quantity: number) => quantity < 1 ? 0.1 : 1;
+const quantityStep = (quantity: number) => quantity <= 1 ? 0.1 : 1;
 
 const normalizeSettings = (settings: Partial<Settings> & { discount?: number }): Settings => {
   const discountPercent = typeof settings.discount === 'number' ? settings.discount : settings.discountPercent;
