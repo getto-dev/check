@@ -88,7 +88,7 @@ describe('estimate integration', () => {
     });
   });
 
-  test('normalizes whitespace and clamps imported discounts without changing items', async () => {
+  test('clamps imported discounts and preserves original item data', async () => {
     const html = await serializeEstimate(items, settings, 'Смета');
     const data = extractJson(html);
     data.settings.address = '  Объект 42   ';
@@ -134,10 +134,13 @@ describe('estimate integration', () => {
       discountPercent: 10,
     };
     const html = await serializeEstimate([dangerous], dangerousSettings, '<Смета>');
+    const data = extractJson(html);
 
     expect(html).not.toContain('<img src=x');
     expect(html).not.toContain('<script>alert');
-    expect(html).toContain('&lt;Смета&gt;');
+    expect(html).toContain('&lt;img src=x onerror=&quot;alert(1)&quot;&gt;');
+    expect(html).toContain('&lt;b&gt;Клиент&lt;/b&gt; &amp; объект');
+    expect(data.name).toBe('<Смета>');
 
     const imported = await loadEstimateFromFile(new File([html], 'estimate.html'));
     expect(imported.items[0].name).toBe(dangerous.name);
