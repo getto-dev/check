@@ -1,41 +1,16 @@
-import { create } from 'zustand';
-import { persist, createJSONStorage } from 'zustand/middleware';
-import type { InvoiceItem, Settings } from './types';
-import { calculateTotals } from './format';
-
-interface AppState {
-  items: InvoiceItem[];
-  settings: Settings;
-  hydrated: boolean;
-  addCatalogItem: (item: Pick<InvoiceItem, 'catalogId' | 'name' | 'description' | 'unit' | 'priceKopecks' | 'categoryId'>, quantity?: number) => void;
-  addManualItem: (item: Omit<InvoiceItem, 'id'>) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  removeItem: (id: string) => void;
-  clear: () => void;
-  updateSettings: (settings: Partial<Settings>) => void;
-  setHydrated: (value: boolean) => void;
-  totals: () => ReturnType<typeof calculateTotals>;
-}
-
-export const useAppStore = create<AppState>()(persist((set, get) => ({
-  items: [],
-  settings: { address: '', discountPercent: 0 },
-  hydrated: false,
-  addCatalogItem: (catalogItem, quantity = 1) => set((state) => {
-    const existing = state.items.find((item) => item.catalogId === catalogItem.catalogId && item.priceKopecks === catalogItem.priceKopecks);
-    if (existing) return { items: state.items.map((item) => item.id === existing.id ? { ...item, quantity: Math.round((item.quantity + quantity) * 100) / 100 } : item) };
-    return { items: [...state.items, { ...catalogItem, id: crypto.randomUUID(), quantity: Math.max(0.1, quantity), type: 'service' }] };
-  }),
-  addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, id: crypto.randomUUID() }] })),
-  updateQuantity: (id, quantity) => set((state) => ({ items: state.items.map((item) => item.id === id ? { ...item, quantity: Math.max(0.1, Math.round(quantity * 100) / 100) } : item) })),
-  removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
-  clear: () => set({ items: [] }),
-  updateSettings: (settings) => set((state) => ({ settings: { ...state.settings, ...settings } })),
-  setHydrated: (value) => set({ hydrated: value }),
-  totals: () => calculateTotals(get().items, get().settings.discountPercent),
-}), {
-  name: 'santehschet-storage-v2',
-  storage: createJSONStorage(() => localStorage),
-  partialize: (state) => ({ items: state.items, settings: state.settings }),
-  onRehydrateStorage: () => (state) => state?.setHydrated(true),
-}));
+'use client';
+import { create } from 'zustand'; import { persist,createJSONStorage } from 'zustand/middleware'; import type { CatalogItem,InvoiceItem,Settings,ThemeMode,TabType } from './types'; import { calculateTotals } from './format';
+interface State {items:InvoiceItem[];settings:Settings;themeMode:ThemeMode;currentTab:TabType;selectedCategory:string|null;searchQuery:string;modalItem:CatalogItem|null;modalOpen:boolean;manualType:'service'|'product';hydrated:boolean;addItem:(item:CatalogItem,qty?:number,priceKopecks?:number)=>void;addCatalogItem:(item:CatalogItem,qty?:number)=>void;addManualItem:(item:Omit<InvoiceItem,'id'>)=>void;updateQuantity:(id:string,q:number)=>void;setQuantity:(id:string,q:number)=>void;removeItem:(id:string)=>void;clearItems:()=>void;clear:()=>void;updateSettings:(s:Partial<Settings>)=>void;setTab:(t:TabType)=>void;setCategory:(c:string|null)=>void;setSearchQuery:(q:string)=>void;openModal:(i:CatalogItem)=>void;closeModal:()=>void;setManualType:(t:'service'|'product')=>void;setThemeMode:(m:ThemeMode)=>void;setHydrated:(v:boolean)=>void;calculateTotals:()=>ReturnType<typeof calculateTotals>;loadEstimateData:(items:InvoiceItem[],settings:Settings)=>void}
+const clamp=(n:number,min:number,max:number)=>Math.max(min,Math.min(max,n));
+export const useAppStore=create<State>()(persist((set,get)=>({items:[],settings:{address:'',discount:0,discountPercent:0},themeMode:'system',currentTab:'catalog',selectedCategory:null,searchQuery:'',modalItem:null,modalOpen:false,manualType:'service',hydrated:false,
+ addItem:(item,qty=1,priceKopecks=item.priceKopecks)=>set(s=>{const quantity=Math.max(.1,Math.round(qty*100)/100);const existing=s.items.find(x=>x.catalogId===item.id&&x.priceKopecks===priceKopecks);if(existing)return{items:s.items.map(x=>x.id===existing.id?{...x,quantity}:x)};return{items:[...s.items,{id:crypto.randomUUID(),catalogId:item.id,name:item.name,description:item.description,quantity,priceKopecks,unit:item.unit,type:'service',categoryId:item.categoryId}]}}),
+ addCatalogItem:(item,qty=1)=>get().addItem(item,qty),
+ addManualItem:item=>set(s=>({items:[...s.items,{...item,id:crypto.randomUUID()}]})),
+ updateQuantity:(id,q)=>set(s=>({items:s.items.map(x=>x.id===id?{...x,quantity:Math.max(.1,Math.round(q*100)/100)}:x)})),
+ setQuantity:(id,q)=>get().updateQuantity(id,q), removeItem:id=>set(s=>({items:s.items.filter(x=>x.id!==id)})), clearItems:()=>set({items:[]}), clear:()=>set({items:[]}),
+ updateSettings:patch=>set(s=>{const next={...s.settings,...patch};if('discount' in patch)next.discount=clamp(Number(patch.discount)||0,0,50),next.discountPercent=next.discount;if('discountPercent' in patch)next.discountPercent=clamp(Number(patch.discountPercent)||0,0,50),next.discount=next.discountPercent;return{settings:next}}),
+ setTab:t=>set({currentTab:t}),setCategory:c=>set({selectedCategory:c}),setSearchQuery:q=>set({searchQuery:q}),openModal:i=>set({modalItem:i,modalOpen:true}),closeModal:()=>set({modalItem:null,modalOpen:false}),setManualType:t=>set({manualType:t}),setThemeMode:m=>set({themeMode:m}),setHydrated:v=>set({hydrated:v}),calculateTotals:()=>calculateTotals(get().items,get().settings.discount),loadEstimateData:(items,settings)=>set({items,settings:{...settings,discount:settings.discount??settings.discountPercent??0,discountPercent:settings.discountPercent??settings.discount??0}})
+}),{name:'santehschet-storage-v3',storage:createJSONStorage(()=>localStorage),partialize:s=>({items:s.items,settings:s.settings,themeMode:s.themeMode}),onRehydrateStorage:()=>state=>{state?.setHydrated(true)}}));
+export const haptic=(type:'light'|'medium'|'success'|'error'='light')=>{if(typeof window==='undefined'||!('vibrate'in navigator))return;const p={light:[10],medium:[20],success:[10,50,10],error:[50,50,50]};navigator.vibrate(p[type])};
+export { formatCurrency,formatQuantity } from './format';
+export const exportToPdf=async(items:InvoiceItem[],settings:Settings)=>{const {exportToPdf:pdf}=await import('./pdf');return pdf(items,settings)};
