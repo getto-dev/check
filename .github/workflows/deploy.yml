@@ -1,29 +1,38 @@
 name: Deploy to GitHub Pages
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: read
+  actions: read
   pages: write
   id-token: write
+
 concurrency:
   group: pages
   cancel-in-progress: true
+
 jobs:
   build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
       - uses: oven-sh/setup-bun@v2
-        with: { bun-version: latest }
+        with:
+          bun-version: latest
       - run: bun install
       - run: bun test
       - run: bun run lint
       - run: NEXT_PUBLIC_BASE_PATH=/checknew bun run build
       - run: touch out/.nojekyll
       - uses: actions/upload-pages-artifact@v5
-        with: { path: out, retention-days: 1 }
+        with:
+          path: out
+          retention-days: 1
+
   deploy:
     needs: build
     environment:
@@ -31,5 +40,25 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
+      - name: Wait for GitHub Pages branch build
+        env:
+          GH_TOKEN: ${{ github.token }}
+          SHA: ${{ github.sha }}
+        run: |
+          for attempt in $(seq 1 60); do
+            run=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/352684197/runs?head_sha=${SHA}&per_page=1" --jq '.workflow_runs[0] // empty')
+            if [ -n "$run" ]; then
+              status=$(printf '%s' "$run" | jq -r '.status')
+              conclusion=$(printf '%s' "$run" | jq -r '.conclusion // ""')
+              echo "Pages branch build: status=$status conclusion=$conclusion"
+              if [ "$status" = "completed" ]; then
+                break
+              fi
+            else
+              echo "Waiting for Pages branch build to appear..."
+            fi
+            sleep 2
+          done
+
       - id: deployment
         uses: actions/deploy-pages@v5
