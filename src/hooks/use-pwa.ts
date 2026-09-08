@@ -8,6 +8,8 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
+type WorkerCleanup = () => void;
+
 export function usePWA() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
   const [isInstalled, setInstalled] = useState(false);
@@ -33,22 +35,25 @@ export function usePWA() {
 
     let registration: ServiceWorkerRegistration | undefined;
     let updateFound: (() => void) | undefined;
+    const workerCleanups: WorkerCleanup[] = [];
+
+    const monitorWorker = (worker: ServiceWorker | null) => {
+      if (!worker) return;
+      const onStateChange = () => {
+        if (worker.state === 'installed' && navigator.serviceWorker.controller) {
+          setWaiting(worker);
+          setNeedsUpdate(true);
+        }
+      };
+      worker.addEventListener('statechange', onStateChange);
+      workerCleanups.push(() => worker.removeEventListener('statechange', onStateChange));
+    };
 
     const setupServiceWorker = async () => {
       if (!('serviceWorker' in navigator)) return;
       try {
         registration = await navigator.serviceWorker.getRegistration();
         if (!registration) return;
-
-        const monitorWorker = (worker: ServiceWorker | null) => {
-          if (!worker) return;
-          worker.addEventListener('statechange', () => {
-            if (worker.state === 'installed' && navigator.serviceWorker.controller) {
-              setWaiting(worker);
-              setNeedsUpdate(true);
-            }
-          });
-        };
 
         updateFound = () => monitorWorker(registration?.installing ?? null);
         registration.addEventListener('updatefound', updateFound);
@@ -75,6 +80,7 @@ export function usePWA() {
       window.removeEventListener('beforeinstallprompt', beforeInstall);
       window.removeEventListener('appinstalled', installed);
       if (registration && updateFound) registration.removeEventListener('updatefound', updateFound);
+      workerCleanups.forEach((cleanup) => cleanup());
       window.removeEventListener('controllerchange', controllerChange);
     };
   }, []);
@@ -97,7 +103,56 @@ export function usePWA() {
     if (!('serviceWorker' in navigator) || !navigator.onLine) return false;
     const registration = await navigator.serviceWorker.getRegistration();
     if (!registration) return false;
-    await registration.update();
+
+    const existingWaiting = registration.waiting;
+    if (existingWaiting) {
+      setWaiting(existingWaiting);
+      setNeedsUpdate(true);
+      return true;
+    }
+
+    const installing = await new Promise<ServiceWorker | null>((resolve) => {
+      let resolved = false;
+      let cleanup = () => {};
+
+      const finish = (worker: ServiceWorker | null) => {
+        if (resolved) return;
+        resolved = true;
+        cleanup();
+        resolve(worker);
+      };
+
+      const onStateChange = () => {
+        const worker = registration.waiting ?? registration.installing;
+        if (registration.waiting) {
+          finish(registration.waiting);
+        } else if (worker?.state === 'installed') {
+          finish(worker);
+        }
+      };
+
+      const onUpdateFound = () => {
+        const worker = registration.installing;
+        if (!worker) return;
+        worker.addEventListener('statechange', onStateChange);
+        cleanup = () => worker.removeEventListener('statechange', onStateChange);
+      };
+
+      registration.addEventListener('updatefound', onUpdateFound, { once: true });
+      cleanup = () => registration.removeEventListener('updatefound', onUpdateFound);
+      void registration.update()
+        .then(() => {
+          if (registration.waiting) finish(registration.waiting);
+          else if (!registration.installing) finish(null);
+        })
+        .catch(() => finish(null));
+    });
+
+    if (installing && installing.state === 'installed' && navigator.serviceWorker.controller) {
+      setWaiting(installing);
+      setNeedsUpdate(true);
+      return true;
+    }
     if (registration.waiting) {
       setWaiting(registration.waiting);
       setNeedsUpdate(true);
