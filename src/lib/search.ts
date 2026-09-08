@@ -37,4 +37,7 @@ export const searchCatalog = (catalog: Record<string, Service[]>, query: string,
   .map((item): ScoredCatalogItem => ({ ...item, score: score(item, query) }))
   .filter((item) => item.score > 0)
   .sort((a, b) => b.score - a.score)
-  .map(({ score: _score, ...item }) => item);
+  .map((item) => {
+    const { score: _score, ...result } = item;
+    return result;
+  });
