@@ -1,28 +1,4 @@
-import type { InvoiceItem, Totals } from './types';
-
-export const kopecksToRubles = (value: number): number => value / 100;
-
-export const formatCurrency = (kopecks: number): string =>
-  new Intl.NumberFormat('ru-RU', {
-    style: 'currency',
-    currency: 'RUB',
-    maximumFractionDigits: 2,
-  }).format(kopecksToRubles(Math.round(kopecks)));
-
-export const formatQuantity = (value: number): string =>
-  Number.isInteger(value) ? String(value) : String(Number(value.toFixed(2)));
-
-export const calculateTotals = (items: InvoiceItem[], discountPercent: number): Totals => {
-  const safeDiscount = Math.min(100, Math.max(0, Number.isFinite(discountPercent) ? discountPercent : 0));
-  const servicesKopecks = items.filter((i) => i.type === 'service')
-    .reduce((sum, item) => sum + Math.round(item.quantity * item.priceKopecks), 0);
-  const productsKopecks = items.filter((i) => i.type === 'product')
-    .reduce((sum, item) => sum + Math.round(item.quantity * item.priceKopecks), 0);
-  const discountKopecks = Math.round(servicesKopecks * safeDiscount / 100);
-  return {
-    servicesKopecks,
-    productsKopecks,
-    discountKopecks,
-    grandTotalKopecks: servicesKopecks - discountKopecks + productsKopecks,
-  };
-};
+import type { InvoiceItem,Totals } from './types';
+export const formatCurrency=(kopecks:number)=>new Intl.NumberFormat('ru-RU',{style:'currency',currency:'RUB',maximumFractionDigits:0}).format(Math.round(kopecks)/100);
+export const formatQuantity=(v:number)=>Number.isInteger(v)?String(v):String(Number(v.toFixed(2)));
+export const calculateTotals=(items:InvoiceItem[],discountPercent:number):Totals=>{const services=items.filter(i=>i.type==='service');const products=items.filter(i=>i.type==='product');const subtotalServices=services.reduce((s,i)=>s+Math.round(i.priceKopecks*i.quantity),0);const subtotalProducts=products.reduce((s,i)=>s+Math.round(i.priceKopecks*i.quantity),0);const discountAmount=Math.round(subtotalServices*Math.max(0,Math.min(100,discountPercent))/100);const grandTotal=Math.max(0,subtotalServices-discountAmount+subtotalProducts);return{subtotalServices,subtotalProducts,discountAmount,grandTotal,servicesKopecks:subtotalServices,productsKopecks:subtotalProducts,discountKopecks:discountAmount,grandTotalKopecks:grandTotal}};
