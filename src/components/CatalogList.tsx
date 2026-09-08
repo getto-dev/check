@@ -8,7 +8,7 @@ import { searchCatalog } from '@/lib/search';
 import { formatCurrency } from '@/lib/format';
 import type { CatalogItem } from '@/lib/types';
 
-const CATEGORY_NAMES = new Map(CATEGORIES.map((category) => [category.id, category.name]));
+const CATEGORY_NAMES = new Map<string, string>(CATEGORIES.map((category) => [category.id, category.name]));
 
 const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; onAdd: () => void; onOpen: () => void }) {
   return <article className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
