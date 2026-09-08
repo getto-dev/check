@@ -1,11 +1,12 @@
 const VERSION = '__VERSION__';
 const CACHE = `santehschet-${VERSION}`;
 const OFFLINE = './offline.html';
+const STATIC_ASSETS = [OFFLINE, './', './fonts/roboto-all-400-normal.woff'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE)
-      .then((cache) => cache.addAll([OFFLINE, './']))
+      .then((cache) => cache.addAll(STATIC_ASSETS))
   );
 });
 
