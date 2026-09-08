@@ -3,7 +3,7 @@ import { join, relative, resolve, sep } from 'node:path';
 
 const outDir = resolve('out');
 const outputFile = join(outDir, 'precache-manifest.json');
-const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? '/checknew').replace(/\/$/, '');
+const basePath = (process.env.NEXT_PUBLIC_BASE_PATH ?? '/check').replace(/\/$/, '');
 
 async function collectFiles(directory) {
   const entries = await readdir(directory, { withFileTypes: true });
