@@ -24,19 +24,34 @@ describe('calculateTotals', () => {
 });
 
 describe('quantity controls', () => {
-  const item = (quantity: number): InvoiceItem => ({
+  const item = (quantity: number, unit = 'шт'): InvoiceItem => ({
     id: 'quantity-test',
-    name: 'Монтаж радиатора',
+    name: unit === 'шт' ? 'Монтаж радиатора' : 'Монтаж теплого пола (пенофол)',
     description: '',
     quantity,
     priceKopecks: 400000,
-    unit: 'шт',
+    unit,
     type: 'service',
     categoryId: 'service',
   });
 
-  test('does not turn 1 into 1.1 after a minus-plus cycle', () => {
+  test('keeps piece-counted items whole', () => {
     useAppStore.setState({ items: [item(1)] });
+
+    useAppStore.getState().changeQuantity('quantity-test', -1);
+    expect(useAppStore.getState().items[0].quantity).toBe(1);
+
+    useAppStore.getState().changeQuantity('quantity-test', 1);
+    expect(useAppStore.getState().items[0].quantity).toBe(2);
+
+    useAppStore.getState().changeQuantity('quantity-test', -1);
+    expect(useAppStore.getState().items[0].quantity).toBe(1);
+
+    useAppStore.setState({ items: [] });
+  });
+
+  test('preserves reversible fractional quantities for measurable units', () => {
+    useAppStore.setState({ items: [item(1, 'м²')] });
 
     useAppStore.getState().changeQuantity('quantity-test', -1);
     expect(useAppStore.getState().items[0].quantity).toBe(0.9);
@@ -44,18 +59,13 @@ describe('quantity controls', () => {
     useAppStore.getState().changeQuantity('quantity-test', 1);
     expect(useAppStore.getState().items[0].quantity).toBe(1);
 
-    useAppStore.setState({ items: [] });
-  });
-
-  test('changes whole units by one while preserving fractional quantities', () => {
-    useAppStore.setState({ items: [item(2)] });
-
+    useAppStore.setState({ items: [item(2, 'м²')] });
     useAppStore.getState().changeQuantity('quantity-test', -1);
     expect(useAppStore.getState().items[0].quantity).toBe(1);
     useAppStore.getState().changeQuantity('quantity-test', 1);
     expect(useAppStore.getState().items[0].quantity).toBe(2);
 
-    useAppStore.setState({ items: [item(0.5)] });
+    useAppStore.setState({ items: [item(0.5, 'м²')] });
     useAppStore.getState().changeQuantity('quantity-test', -1);
     expect(useAppStore.getState().items[0].quantity).toBe(0.4);
     useAppStore.getState().changeQuantity('quantity-test', 1);
