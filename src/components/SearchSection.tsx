@@ -140,7 +140,7 @@ export const SearchSection = memo(function SearchSection({
           aria-label="Добавить свою позицию"
         >
           <Plus className="w-5 h-5 shrink-0" />
-          <span className="hidden xs:inline sm:inline">Своё</span>
+          <span className="hidden sm:inline">Своё</span>
         </button>
       </div>
 
