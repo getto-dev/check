@@ -16,15 +16,14 @@ export const Header = memo(function Header() {
   return <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border px-3 sm:px-4 py-2.5 sm:py-3 safe-top">
     <div className="flex items-center justify-between gap-2 sm:gap-3 max-w-5xl mx-auto">
       <div className="min-w-[40px] sm:min-w-[44px]">
-        {currentTab !== 'catalog' && <button type="button" onClick={() => setTab('catalog')} className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-muted hover:bg-primary hover:text-primary-foreground active:scale-95 transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring" aria-label="Назад"><ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>}
+        {currentTab !== 'catalog' && <button type="button" onClick={() => setTab('catalog')} className="w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl bg-muted hover:bg-secondary hover:text-primary active:scale-95 transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring" aria-label="Назад"><ChevronLeft className="w-5 h-5 sm:w-6 sm:h-6" /></button>}
       </div>
       <button type="button" onClick={() => setTab('catalog')} className="text-base sm:text-lg font-extrabold tracking-tight gradient-text touch-manipulation focus-visible:ring-2 focus-visible:ring-ring" aria-label="На главную">СантехСчет</button>
-      <div className="flex items-center gap-1.5 sm:gap-2">
-        <button type="button" onClick={() => setTab('settings')} className={cn('w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring', currentTab === 'settings' ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-primary hover:text-primary-foreground active:scale-95')} aria-label="Настройки"><Settings className="w-5 h-5" /></button>
-        <button type="button" onClick={() => setTab(currentTab === 'invoice' ? 'catalog' : 'invoice')} className={cn('flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring', currentTab === 'invoice' ? 'bg-primary/20 text-primary' : 'gradient-bg text-white hover:shadow-lg active:scale-95')} aria-label="Открыть смету">
+      <div className="desktop-only flex items-center gap-1.5 sm:gap-2">
+        <button type="button" onClick={() => setTab('settings')} className={cn('w-10 h-10 sm:w-11 sm:h-11 flex items-center justify-center rounded-xl transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring', currentTab === 'settings' ? 'bg-primary text-primary-foreground' : 'bg-muted hover:bg-secondary hover:text-primary active:scale-95')} aria-label="Настройки"><Settings className="w-5 h-5" /></button>
+        <button type="button" onClick={() => setTab(currentTab === 'invoice' ? 'catalog' : 'invoice')} className={cn('flex items-center gap-1.5 sm:gap-2 px-2.5 sm:px-3.5 py-2 sm:py-2.5 rounded-xl font-bold text-xs sm:text-sm transition-all touch-manipulation focus-visible:ring-2 focus-visible:ring-ring', currentTab === 'invoice' ? 'bg-secondary text-primary' : 'gradient-bg text-white hover:shadow-lg active:scale-95')} aria-label="Открыть смету">
           <FileText className="w-4 h-4" />
-          <span className="tabular-nums hidden sm:inline">{formatCurrency(hydrated ? totals.grandTotalKopecks : 0)}</span>
-          <span className="tabular-nums sm:hidden">{hydrated ? count : 0}</span>
+          <span className="tabular-nums">{formatCurrency(hydrated ? totals.grandTotalKopecks : 0)}</span>
           {hydrated && count > 0 && <span className="bg-white/25 px-1.5 sm:px-2 py-0.5 rounded-full text-[10px] sm:text-xs">{count}</span>}
         </button>
       </div>
