@@ -23,10 +23,23 @@ export function MobileNavigation() {
   const hydrated = useAppStore((state) => state.hydrated);
   const totals = useMemo(() => calculateTotals(invoiceItems, discountPercent), [invoiceItems, discountPercent]);
   const total = hydrated ? formatCurrency(totals.grandTotalKopecks) : formatCurrency(0);
+  const hasCurrentEstimate = itemCount > 0;
+
+  const handleTabClick = (tab: TabType) => {
+    if (tab === 'invoice') {
+      setTab(currentTab === 'invoice' ? 'catalog' : 'invoice');
+      return;
+    }
+    if (tab === 'settings') {
+      setTab(currentTab === 'settings' ? 'catalog' : 'settings');
+      return;
+    }
+    setTab(tab);
+  };
 
   return (
     <>
-      <div className={cn('mobile-estimate-bar safe-bottom', itemCount > 0 ? 'mobile-estimate-bar--active' : 'mobile-estimate-bar--empty')}>
+      <div className={cn('mobile-estimate-bar safe-bottom', hasCurrentEstimate ? 'mobile-estimate-bar--active' : 'mobile-estimate-bar--empty')}>
         <button
           type="button"
           onClick={() => setTab('invoice')}
@@ -49,7 +62,7 @@ export function MobileNavigation() {
               <button
                 key={tab}
                 type="button"
-                onClick={() => setTab(tab)}
+                onClick={() => handleTabClick(tab)}
                 className={cn('mobile-nav__item', active && 'mobile-nav__item--active')}
                 aria-current={active ? 'page' : undefined}
               >
