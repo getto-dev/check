@@ -20,21 +20,21 @@
 
 :root { color-scheme: light; }
 .dark {
-  --color-background: #11101a;
-  --color-foreground: #f4f4f5;
-  --color-card: #1b1926;
-  --color-card-foreground: #f4f4f5;
-  --color-muted: #272434;
-  --color-muted-foreground: #a1a1aa;
-  --color-border: #3f3a4c;
-  --color-primary: #a78bfa;
-  --color-primary-foreground: #1e1b2e;
-  --color-secondary: #312e5a;
-  --color-secondary-foreground: #ede9fe;
-  --color-accent: #27223a;
-  --color-accent-foreground: #f4f4f5;
+  --color-background: #111315;
+  --color-foreground: #f1f3f5;
+  --color-card: #1a1d21;
+  --color-card-foreground: #f1f3f5;
+  --color-muted: #22262b;
+  --color-muted-foreground: #9aa1a9;
+  --color-border: #30363d;
+  --color-primary: #2388c9;
+  --color-primary-foreground: #ffffff;
+  --color-secondary: #1d3342;
+  --color-secondary-foreground: #d7ecf8;
+  --color-accent: #202a31;
+  --color-accent-foreground: #f1f3f5;
   --color-destructive: #f87171;
-  --color-ring: #a78bfa;
+  --color-ring: #4da3d9;
   color-scheme: dark;
 }
 
@@ -49,6 +49,8 @@ input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { margin: 0; }
 .gradient-bg { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
 .gradient-text { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
+.dark .gradient-bg { background: linear-gradient(135deg, #1e6fa8 0%, #2388c9 100%); }
+.dark .gradient-text { background: linear-gradient(135deg, #5bb7e9 0%, #2388c9 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .safe-top { padding-top: max(0.625rem, env(safe-area-inset-top)); }
 .safe-bottom { padding-bottom: max(0.75rem, env(safe-area-inset-bottom)); }
 .icon-button { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 0.625rem; background: var(--color-card); color: var(--color-foreground); }
