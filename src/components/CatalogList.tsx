@@ -11,15 +11,35 @@ import type { CatalogItem } from '@/lib/types';
 const CATEGORY_NAMES = new Map<string, string>(CATEGORIES.map((category) => [category.id, category.name]));
 
 const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; onAdd: () => void; onOpen: () => void }) {
-  return <article className="flex items-center gap-3 p-4 rounded-2xl bg-card border border-border">
-    <button type="button" className="flex-1 min-w-0 text-left rounded-xl focus-visible:ring-2 focus-visible:ring-ring" onClick={onOpen} aria-label={`Открыть ${item.name}`}>
-      <h3 className="font-bold truncate">{item.name}</h3>
-      <p className="text-xs text-muted-foreground truncate">{item.description}</p>
-      <p className="text-[10px] text-muted-foreground/70 uppercase mt-1">{CATEGORY_NAMES.get(item.categoryId)}</p>
-    </button>
-    <div className="text-right"><div className="font-extrabold">{formatCurrency(item.priceKopecks)}</div><div className="text-[10px] text-muted-foreground">{item.unit}</div></div>
-    <button type="button" onClick={onAdd} className="w-10 h-10 rounded-full gradient-bg text-white flex items-center justify-center focus-visible:ring-2 focus-visible:ring-ring" aria-label={`Добавить ${item.name}`}><Plus className="w-5 h-5" /></button>
-  </article>;
+  return (
+    <article className="grid grid-cols-[minmax(0,1fr)_auto] sm:flex sm:items-center gap-x-3 gap-y-2 p-3.5 sm:p-4 rounded-2xl bg-card border border-border overflow-hidden">
+      <button
+        type="button"
+        className="min-w-0 w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        onClick={onOpen}
+        aria-label={`Открыть ${item.name}`}
+      >
+        <h3 className="font-bold leading-snug break-words line-clamp-2">{item.name}</h3>
+        <p className="mt-1 text-xs leading-relaxed text-muted-foreground break-words line-clamp-2">{item.description}</p>
+        <p className="text-[10px] leading-tight text-muted-foreground/70 uppercase mt-1.5 break-words">{CATEGORY_NAMES.get(item.categoryId)}</p>
+      </button>
+
+      <div className="row-start-1 col-start-2 flex items-center gap-2 sm:ml-auto">
+        <div className="text-right whitespace-nowrap">
+          <div className="font-extrabold tabular-nums">{formatCurrency(item.priceKopecks)}</div>
+          <div className="text-[10px] text-muted-foreground">{item.unit}</div>
+        </div>
+        <button
+          type="button"
+          onClick={onAdd}
+          className="w-11 h-11 shrink-0 rounded-full gradient-bg text-white flex items-center justify-center touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          aria-label={`Добавить ${item.name}`}
+        >
+          <Plus className="w-5 h-5" />
+        </button>
+      </div>
+    </article>
+  );
 });
 
 export const CatalogList = memo(function CatalogList() {
