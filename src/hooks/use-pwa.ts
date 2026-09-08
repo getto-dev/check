@@ -33,7 +33,6 @@ export function usePWA() {
 
     let registration: ServiceWorkerRegistration | undefined;
     let updateFound: (() => void) | undefined;
-    let controllerChange: (() => void) | undefined;
 
     const setupServiceWorker = async () => {
       if (!('serviceWorker' in navigator)) return;
@@ -65,7 +64,7 @@ export function usePWA() {
 
     void setupServiceWorker();
 
-    controllerChange = () => {
+    const controllerChange = () => {
       setWaiting(null);
       setNeedsUpdate(false);
       window.location.reload();
@@ -76,7 +75,7 @@ export function usePWA() {
       window.removeEventListener('beforeinstallprompt', beforeInstall);
       window.removeEventListener('appinstalled', installed);
       if (registration && updateFound) registration.removeEventListener('updatefound', updateFound);
-      if (controllerChange) window.removeEventListener('controllerchange', controllerChange);
+      window.removeEventListener('controllerchange', controllerChange);
     };
   }, []);
 
