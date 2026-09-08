@@ -39,7 +39,10 @@ interface State {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
-const quantityStep = (quantity: number) => quantity <= 1 ? 0.1 : 1;
+const quantityStep = (quantity: number, direction: -1 | 1) => {
+  if (direction === -1) return quantity > 1 ? 1 : 0.1;
+  return quantity >= 1 ? 1 : 0.1;
+};
 
 const normalizeSettings = (settings: Partial<Settings> & { discount?: number }): Settings => {
   const discountPercent = typeof settings.discount === 'number' ? settings.discount : settings.discountPercent;
@@ -94,7 +97,7 @@ export const useAppStore = create<State>()(
       changeQuantity: (id, direction) => set((state) => ({
         items: state.items.map((item) => {
           if (item.id !== id) return item;
-          const step = quantityStep(item.quantity);
+          const step = quantityStep(item.quantity, direction);
           return { ...item, quantity: normalizeQuantity(item.quantity + direction * step) };
         }),
       })),
