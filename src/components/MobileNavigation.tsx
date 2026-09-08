@@ -30,10 +30,6 @@ export function MobileNavigation() {
       setTab(currentTab === 'invoice' ? 'catalog' : 'invoice');
       return;
     }
-    if (tab === 'settings') {
-      setTab(currentTab === 'settings' ? 'catalog' : 'settings');
-      return;
-    }
     setTab(tab);
   };
 
