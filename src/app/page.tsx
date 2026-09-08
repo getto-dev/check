@@ -10,6 +10,7 @@ import { SettingsSection } from '@/components/SettingsSection';
 import { AddItemModal } from '@/components/AddItemModal';
 import { InstallBanner } from '@/components/InstallBanner';
 import { IOSInstallBanner } from '@/components/IOSInstallBanner';
+import { MobileNavigation } from '@/components/MobileNavigation';
 import { useAppStore } from '@/lib/store';
 import { usePWA } from '@/hooks/use-pwa';
 
@@ -27,15 +28,21 @@ export default function HomePage() {
       case 'settings':
         return <SettingsSection />;
       default:
-        return <><SearchSection onManualClick={() => setTab('manual')} /><section className="flex-1 px-3 sm:px-4 pb-6 mx-auto w-full max-w-5xl overflow-y-auto"><CatalogList /></section></>;
+        return <>
+          <SearchSection onManualClick={() => setTab('manual')} />
+          <section className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8 mx-auto w-full max-w-5xl overflow-y-auto">
+            <CatalogList />
+          </section>
+        </>;
     }
   }, [currentTab, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
-    <main className="flex-1 flex flex-col mx-auto w-full max-w-5xl">{content}</main>
+    <main className="flex-1 flex flex-col mx-auto w-full max-w-5xl pb-32 sm:pb-0">{content}</main>
     <AddItemModal />
     <InstallBanner onInstall={pwa.install} canInstall={pwa.canInstall} isInstalled={pwa.isInstalled} />
     <IOSInstallBanner isStandalone={pwa.isStandalone} isInstalled={pwa.isInstalled} />
+    <MobileNavigation />
   </div>;
 }
