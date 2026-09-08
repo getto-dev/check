@@ -1,7 +1,7 @@
 'use client';
 
-import { memo, useCallback } from 'react';
-import { Search, X, Plus } from 'lucide-react';
+import { memo, useCallback, useEffect, useRef, useState } from 'react';
+import { Check, ChevronDown, Search, X, Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { CATEGORIES } from '@/lib/catalog';
 import { cn } from '@/lib/utils';
@@ -15,12 +15,97 @@ export const SearchSection = memo(function SearchSection({
   const setCategory = useAppStore((state) => state.setCategory);
   const searchQuery = useAppStore((state) => state.searchQuery);
   const setSearchQuery = useAppStore((state) => state.setSearchQuery);
+  const [categoryOpen, setCategoryOpen] = useState(false);
+  const [activeIndex, setActiveIndex] = useState(0);
+  const categoryRef = useRef<HTMLDivElement>(null);
+  const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
+
+  const selectedIndex = selectedCategory
+    ? CATEGORIES.findIndex((category) => category.id === selectedCategory) + 1
+    : 0;
+  const displayIndex = selectedIndex >= 0 ? selectedIndex : 0;
+  const selectedLabel = displayIndex === 0 ? 'Все категории' : CATEGORIES[displayIndex - 1]?.name ?? 'Все категории';
+
+  const closeCategory = useCallback(() => {
+    setCategoryOpen(false);
+    setActiveIndex(displayIndex);
+  }, [displayIndex]);
+
+  const selectCategory = useCallback(
+    (index: number) => {
+      setCategory(index === 0 ? null : CATEGORIES[index - 1]?.id ?? null);
+      setCategoryOpen(false);
+      setActiveIndex(index);
+    },
+    [setCategory],
+  );
+
+  const handleCategoryKeyDown = useCallback(
+    (event: React.KeyboardEvent<HTMLButtonElement>) => {
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+        event.preventDefault();
+        setCategoryOpen(true);
+        setActiveIndex((index) => (event.key === 'ArrowDown' ? Math.min(index + 1, CATEGORIES.length) : Math.max(index - 1, 0)));
+        return;
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        setCategoryOpen((open) => !open);
+        return;
+      }
+      if (event.key === 'Escape') {
+        event.preventDefault();
+        closeCategory();
+      }
+    },
+    [closeCategory],
+  );
+
+  useEffect(() => {
+    if (!categoryOpen) return;
+
+    const handlePointerDown = (event: PointerEvent) => {
+      if (categoryRef.current && !categoryRef.current.contains(event.target as Node)) {
+        closeCategory();
+      }
+    };
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') {
+        closeCategory();
+        return;
+      }
+      if (event.key === 'ArrowDown' || event.key === 'ArrowUp' || event.key === 'Home' || event.key === 'End') {
+        event.preventDefault();
+        setActiveIndex((index) => {
+          if (event.key === 'Home') return 0;
+          if (event.key === 'End') return CATEGORIES.length;
+          return event.key === 'ArrowDown' ? Math.min(index + 1, CATEGORIES.length) : Math.max(index - 1, 0);
+        });
+      }
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        selectCategory(activeIndex);
+      }
+    };
+
+    document.addEventListener('pointerdown', handlePointerDown);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('pointerdown', handlePointerDown);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, [activeIndex, categoryOpen, closeCategory, selectCategory]);
+
+  useEffect(() => {
+    if (categoryOpen) optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
+  }, [activeIndex, categoryOpen]);
+
   const handleClear = useCallback(() => setSearchQuery(''), [setSearchQuery]);
 
   return (
     <section className="px-3 sm:px-4 py-3 sm:py-4 max-w-5xl mx-auto w-full">
-      <div className="flex gap-2 sm:gap-2.5">
-        <div className="flex-1 relative">
+      <div className="flex gap-2 sm:gap-2.5 items-stretch">
+        <div className="flex-1 min-w-0 relative">
           <Search className="absolute left-3 sm:left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground pointer-events-none" />
           <input
             type="search"
@@ -28,52 +113,99 @@ export const SearchSection = memo(function SearchSection({
             onChange={(e) => setSearchQuery(e.target.value)}
             placeholder="Поиск услуг..."
             className={cn(
-              'w-full pl-10 sm:pl-12 pr-10 py-3 sm:py-3.5 rounded-2xl text-sm sm:text-base font-medium',
+              'w-full min-w-0 pl-10 sm:pl-12 pr-12 py-3 sm:py-3.5 min-h-11 rounded-2xl text-sm sm:text-base font-medium',
               'bg-card border-2 border-border',
               'focus:outline-none focus:border-primary transition-all touch-manipulation',
             )}
             aria-label="Поиск услуг"
+            enterKeyHint="search"
           />
           {searchQuery && (
             <button
               type="button"
               onClick={handleClear}
-              className="absolute right-2.5 top-1/2 -translate-y-1/2 w-7 h-7 flex items-center justify-center rounded-full bg-muted-foreground text-white"
+              className="absolute right-1 top-1/2 -translate-y-1/2 w-11 h-11 flex items-center justify-center rounded-full focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
               aria-label="Очистить поиск"
             >
-              <X className="w-3.5 h-3.5" />
+              <span className="w-7 h-7 flex items-center justify-center rounded-full bg-muted-foreground text-white">
+                <X className="w-3.5 h-3.5" />
+              </span>
             </button>
           )}
         </div>
         <button
           type="button"
           onClick={onManualClick}
-          className="flex items-center gap-2 px-3.5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap bg-card border-2 border-border hover:border-primary hover:text-primary"
+          className="shrink-0 flex items-center justify-center gap-2 min-w-11 min-h-11 px-3.5 py-3 rounded-2xl text-sm font-bold whitespace-nowrap bg-card border-2 border-border hover:border-primary hover:text-primary focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
           aria-label="Добавить свою позицию"
         >
-          <Plus className="w-5 h-5" />
-          <span className="hidden sm:inline">Своё</span>
+          <Plus className="w-5 h-5 shrink-0" />
+          <span className="hidden xs:inline sm:inline">Своё</span>
         </button>
       </div>
 
-      <div className="mt-3">
-        <label htmlFor="category" className="sr-only">
+      <div className="mt-3 relative" ref={categoryRef}>
+        <span className="sr-only" id="category-label">
           Выбор категории
-        </label>
-        <select
-          id="category"
-          value={selectedCategory ?? 'all'}
-          onChange={(e) => setCategory(e.target.value === 'all' ? null : e.target.value)}
-          className="w-full h-10 px-3 py-3.5 rounded-2xl text-sm font-semibold bg-card border-2 border-border focus:outline-none focus:border-primary"
-          aria-label="Выбор категории"
+        </span>
+        <button
+          type="button"
+          className="w-full min-h-11 px-3.5 sm:px-4 rounded-2xl text-sm font-semibold bg-card border-2 border-border flex items-center justify-between gap-3 text-left focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-haspopup="listbox"
+          aria-expanded={categoryOpen}
+          aria-controls="category-listbox"
+          aria-labelledby="category-label"
+          onClick={() => setCategoryOpen((open) => !open)}
+          onKeyDown={handleCategoryKeyDown}
         >
-          <option value="all">Все категории</option>
-          {CATEGORIES.map((category) => (
-            <option key={category.id} value={category.id}>
-              {category.name}
-            </option>
-          ))}
-        </select>
+          <span className="truncate min-w-0">{selectedLabel}</span>
+          <ChevronDown className={cn('w-5 h-5 shrink-0 transition-transform', categoryOpen && 'rotate-180')} aria-hidden="true" />
+        </button>
+
+        {categoryOpen && (
+          <div
+            id="category-listbox"
+            role="listbox"
+            aria-label="Категории услуг"
+            className="absolute z-30 left-0 right-0 mt-2 max-h-[min(60vh,24rem)] overflow-y-auto overscroll-contain rounded-2xl border-2 border-border bg-card p-1.5 shadow-xl"
+          >
+            <button
+              ref={(element) => { optionRefs.current[0] = element; }}
+              type="button"
+              role="option"
+              aria-selected={selectedIndex === 0}
+              onClick={() => selectCategory(0)}
+              className={cn(
+                'w-full min-h-11 px-3 rounded-xl flex items-center justify-between gap-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                activeIndex === 0 && 'bg-accent',
+              )}
+            >
+              <span>Все категории</span>
+              {selectedIndex === 0 && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}
+            </button>
+            {CATEGORIES.map((category, index) => {
+              const optionIndex = index + 1;
+              const selected = selectedCategory === category.id;
+              return (
+                <button
+                  key={category.id}
+                  ref={(element) => { optionRefs.current[optionIndex] = element; }}
+                  type="button"
+                  role="option"
+                  aria-selected={selected}
+                  onClick={() => selectCategory(optionIndex)}
+                  className={cn(
+                    'w-full min-h-11 px-3 rounded-xl flex items-center justify-between gap-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
+                    activeIndex === optionIndex && 'bg-accent',
+                  )}
+                >
+                  <span>{category.name}</span>
+                  {selected && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}
+                </button>
+              );
+            })}
+          </div>
+        )}
       </div>
     </section>
   );
