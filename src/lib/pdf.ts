@@ -175,16 +175,18 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   page.drawLine({ start: { x: summaryLeft, y }, end: { x: summaryRight, y }, thickness: 1.5, color: BLUE });
   y -= 15;
 
-  if (services.length) {
-    text('Работы:', summaryLeft, y, 8, MUTED);
+  const hasServices = services.length > 0;
+  const hasProducts = products.length > 0;
+  const hasBothTypes = hasServices && hasProducts;
+
+  if (hasBothTypes) {
     const serviceValue = money(totals.servicesKopecks);
+    text('Работы:', summaryLeft, y, 8, MUTED);
     text(serviceValue, rightTextX(font, serviceValue, 8, summaryRight), y, 8);
     y -= 13;
-  }
 
-  if (products.length) {
-    text('Материалы:', summaryLeft, y, 8, MUTED);
     const productValue = money(totals.productsKopecks);
+    text('Материалы:', summaryLeft, y, 8, MUTED);
     text(productValue, rightTextX(font, productValue, 8, summaryRight), y, 8);
     y -= 13;
   }
