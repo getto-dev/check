@@ -4,11 +4,10 @@ import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import type { InvoiceItem, Settings } from './types';
 import { formatCurrency, formatQuantity } from './format';
+import { ESTIMATE_LAYOUT } from './constants';
 import { createEstimateLayout } from './estimate-layout';
 
-const { pageWidth: PAGE_WIDTH, pageHeight: PAGE_HEIGHT, marginX: MARGIN_X, top: TOP, nameRight: NAME_RIGHT, quantityLeft: QTY_LEFT, quantityRight: QTY_RIGHT, priceLeft: PRICE_LEFT, priceRight: PRICE_RIGHT, totalLeft: TOTAL_LEFT, summaryLeft: SUMMARY_LEFT, text: TEXT_SIZES, row: ROW } = {
-  ...createEstimateLayout([], { address: '', discountPercent: 0 }).constants,
-};
+const { pageWidth: PAGE_WIDTH, pageHeight: PAGE_HEIGHT, marginX: MARGIN_X, top: TOP, nameRight: NAME_RIGHT, quantityLeft: QTY_LEFT, quantityRight: QTY_RIGHT, priceLeft: PRICE_LEFT, priceRight: PRICE_RIGHT, totalLeft: TOTAL_LEFT, summaryLeft: SUMMARY_LEFT, text: TEXT_SIZES, row: ROW } = ESTIMATE_LAYOUT;
 const BLUE = rgb(35 / 255, 136 / 255, 201 / 255);
 const TEXT = rgb(35 / 255, 39 / 255, 43 / 255);
 const MUTED = rgb(105 / 255, 112 / 255, 120 / 255);
@@ -84,14 +83,12 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     }
   };
 
-  const drawTable = (rows: InvoiceItem[]) => {
+  const drawTable = (rows: InvoiceItem[], headerLabel: string) => {
     if (!rows.length) return;
     ensureSpace(72);
 
     const xName = MARGIN_X;
     const right = PAGE_WIDTH - MARGIN_X;
-    const headerLabel = layout.sections.find((section) => section.items === rows)?.title ?? '';
-
     page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
     const headerY = y - 18;
     text(headerLabel, xName, headerY, TEXT_SIZES.section, MUTED);
@@ -129,7 +126,8 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     }
   };
 
-  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: rightOfPage(), y }, thickness: 2, color: BLUE });
+  const right = PAGE_WIDTH - MARGIN_X;
+  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: right, y }, thickness: 2, color: BLUE });
   y -= 17;
 
   const documentTitle = `СЧЕТ №${layout.number}`;
@@ -151,7 +149,7 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   y -= 13;
 
   for (const section of layout.sections) {
-    drawTable(section.items);
+    drawTable(section.items, section.title);
   }
 
   ensureSpace(65);
@@ -201,8 +199,4 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   anchor.click();
   anchor.remove();
   window.setTimeout(() => URL.revokeObjectURL(url), 60_000);
-
-  function rightOfPage() {
-    return PAGE_WIDTH - MARGIN_X;
-  }
 }
