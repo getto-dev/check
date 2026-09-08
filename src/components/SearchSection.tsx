@@ -11,7 +11,10 @@ export const SearchSection = memo(function SearchSection({
 }: {
   onManualClick: () => void;
 }) {
-  const { selectedCategory, setCategory, searchQuery, setSearchQuery } = useAppStore();
+  const selectedCategory = useAppStore((state) => state.selectedCategory);
+  const setCategory = useAppStore((state) => state.setCategory);
+  const searchQuery = useAppStore((state) => state.searchQuery);
+  const setSearchQuery = useAppStore((state) => state.setSearchQuery);
   const handleClear = useCallback(() => setSearchQuery(''), [setSearchQuery]);
 
   return (
