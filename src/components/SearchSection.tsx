@@ -88,7 +88,7 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
     <section className="px-3 sm:px-4 pt-4 pb-2 sm:pt-6 sm:pb-3 max-w-5xl mx-auto w-full">
       <div className="mb-3 sm:mb-4">
         <p className="text-xs font-bold uppercase tracking-[0.08em] text-muted-foreground">Каталог</p>
-        <h1 className="mt-1 text-2xl sm:text-3xl font-extrabold tracking-tight">Добавьте работу или материал</h1>
+        <h1 className="mt-1 text-xs font-bold tracking-tight">Добавьте работу или материал</h1>
       </div>
       <div className="flex gap-2 sm:gap-2.5 items-stretch">
         <div className="flex-1 min-w-0 relative">
