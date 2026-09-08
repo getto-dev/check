@@ -8,7 +8,7 @@ const settings: Settings = { address: 'ул. Тестовая <1>', discount: 7,
 test('serialized estimate contains versioned JSON and escaped HTML', () => {
   const html = serializeEstimate(items, settings, 'Дом <1>');
   expect(html).toContain('id="estimate-data"');
-  expect(html).toContain('&lt;тест&gt;');
+  expect(html).toContain('Описание \\u003cтест\\u003e');
   expect(html).toContain('"version":1');
 });
 
