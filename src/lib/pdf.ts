@@ -163,7 +163,7 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     const titleWidth = font.widthOfTextAtSize(documentTitle, 10);
     text(visibleObject, MARGIN_X + titleWidth + 18, y + 1, objectSize, MUTED);
   }
-  y -= 22;
+  y -= 13;
 
   drawTable('РАБОТЫ И УСЛУГИ', services);
   drawTable('МАТЕРИАЛЫ И ТОВАРЫ', products);
