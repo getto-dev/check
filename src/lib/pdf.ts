@@ -90,9 +90,7 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
 
   const drawTable = (title: string, rows: InvoiceItem[]) => {
     if (!rows.length) return;
-    ensureSpace(86);
-    text(title, MARGIN_X, y, 10, BLUE);
-    y -= 14;
+    ensureSpace(72);
 
     const xName = MARGIN_X;
     const nameRight = 380;
@@ -103,9 +101,12 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     const totalLeft = 500;
     const totalRight = PAGE_WIDTH - MARGIN_X;
     const right = PAGE_WIDTH - MARGIN_X;
+    const headerLabel = title === 'РАБОТЫ И УСЛУГИ'
+      ? 'Наименование работ и услуг'
+      : 'Наименование материалов и товаров';
 
     page.drawLine({ start: { x: MARGIN_X, y: y - 3 }, end: { x: right, y: y - 3 }, thickness: 1, color: BLUE });
-    text('Наименование', xName, y - 17, 8, MUTED);
+    text(headerLabel, xName, y - 17, 8, MUTED);
     text('Кол.', centeredTextX(font, 'Кол.', 8, qtyLeft, qtyRight), y - 17, 8, MUTED);
     text('Цена', centeredTextX(font, 'Цена', 8, priceLeft, priceRight), y - 17, 8, MUTED);
     text('Сумма', centeredTextX(font, 'Сумма', 8, totalLeft, totalRight), y - 17, 8, MUTED);
@@ -122,8 +123,7 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
       const rowHeight = Math.max(28, contentHeight + 12);
       ensureSpace(rowHeight + 6);
 
-      const blockHeight = contentHeight;
-      const blockTopY = y + (rowHeight - 6 - blockHeight) / 2;
+      const blockTopY = y + (rowHeight - 6 - contentHeight) / 2;
       nameLines.forEach((line, index) => text(line, xName, blockTopY - index * nameLineHeight, nameSize));
       const descStartY = blockTopY - nameLines.length * nameLineHeight - 1;
       descLines.forEach((line, index) => text(line, xName, descStartY - index * descLineHeight, descriptionSize, MUTED));
@@ -146,20 +146,20 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   page.drawLine({ start: { x: MARGIN_X, y: headerY }, end: { x: PAGE_WIDTH - MARGIN_X, y: headerY }, thickness: 2, color: BLUE });
   y -= 17;
 
-  const title = `СЧЕТ №${number}`;
-  text(title, MARGIN_X, y, 10, TEXT);
+  const documentTitle = `СЧЕТ №${number}`;
+  text(documentTitle, MARGIN_X, y, 10, TEXT);
   if (settings.address.trim()) {
     const prefix = 'Объект: ';
     const address = settings.address.trim();
     const objectSize = 8;
-    const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(title, 10) - 18;
+    const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(documentTitle, 10) - 18;
     const fullObject = `${prefix}${address}`;
     const objectLines = wrapText(fullObject, font, objectSize, Math.max(120, availableWidth));
     const firstLine = objectLines.join(' ');
     const visibleObject = font.widthOfTextAtSize(firstLine, objectSize) <= availableWidth
       ? firstLine
       : `${prefix}${address.slice(0, Math.max(1, Math.floor(address.length * 0.72)))}…`;
-    const titleWidth = font.widthOfTextAtSize(title, 10);
+    const titleWidth = font.widthOfTextAtSize(documentTitle, 10);
     text(visibleObject, MARGIN_X + titleWidth + 18, y + 1, objectSize, MUTED);
   }
   y -= 22;
