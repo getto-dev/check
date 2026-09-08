@@ -38,8 +38,13 @@ interface State {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
-const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
-const quantityStep = (quantity: number, direction: -1 | 1) => {
+const isDiscreteUnit = (unit: string) => unit.trim().toLowerCase() === 'шт';
+const normalizeQuantity = (value: number, unit = 'шт') => {
+  const minimum = isDiscreteUnit(unit) ? 1 : 0.1;
+  return Math.max(minimum, Math.round(value * 100) / 100);
+};
+const quantityStep = (quantity: number, unit: string, direction: -1 | 1) => {
+  if (isDiscreteUnit(unit)) return 1;
   if (direction === -1) return quantity > 1 ? 1 : 0.1;
   return quantity >= 1 ? 1 : 0.1;
 };
@@ -67,14 +72,14 @@ export const useAppStore = create<State>()(
       hydrated: false,
 
       addItem: (item, qty = 1, priceKopecks = item.priceKopecks) => set((state) => {
-        const quantity = normalizeQuantity(qty);
+        const quantity = normalizeQuantity(qty, item.unit);
         const existing = state.items.find(
           (entry) => entry.catalogId === item.id
             && entry.priceKopecks === priceKopecks
             && entry.type === 'service',
         );
         if (existing) {
-          return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) } : entry) };
+          return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity, entry.unit) } : entry) };
         }
         return {
           items: [...state.items, {
@@ -92,13 +97,15 @@ export const useAppStore = create<State>()(
       }),
 
       addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
-      addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, id: crypto.randomUUID() }] })),
-      updateQuantity: (id, quantity) => set((state) => ({ items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity) } : item) })),
+      addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, quantity: normalizeQuantity(item.quantity, item.unit), id: crypto.randomUUID() }] })),
+      updateQuantity: (id, quantity) => set((state) => ({
+        items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity, item.unit) } : item),
+      })),
       changeQuantity: (id, direction) => set((state) => ({
         items: state.items.map((item) => {
           if (item.id !== id) return item;
-          const step = quantityStep(item.quantity, direction);
-          return { ...item, quantity: normalizeQuantity(item.quantity + direction * step) };
+          const step = quantityStep(item.quantity, item.unit, direction);
+          return { ...item, quantity: normalizeQuantity(item.quantity + direction * step, item.unit) };
         }),
       })),
       removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
@@ -114,7 +121,7 @@ export const useAppStore = create<State>()(
       setThemeMode: (mode) => set({ themeMode: mode }),
       setHydrated: (value) => set({ hydrated: value }),
       calculateTotals: () => calculateTotals(get().items, get().settings.discountPercent),
-      loadEstimateData: (items, settings) => set({ items, settings: normalizeSettings(settings) }),
+      loadEstimateData: (items, settings) => set({ items: items.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })), settings: normalizeSettings(settings) }),
     }),
     {
       name: 'santehschet-storage-v3',
@@ -125,6 +132,7 @@ export const useAppStore = create<State>()(
         return {
           ...currentState,
           ...persisted,
+          items: persisted?.items?.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })) ?? currentState.items,
           settings: normalizeSettings(persisted?.settings ?? currentState.settings),
         };
       },
