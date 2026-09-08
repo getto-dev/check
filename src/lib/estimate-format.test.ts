@@ -6,12 +6,12 @@ import type { InvoiceItem, Settings } from './types';
 const items: InvoiceItem[] = [{ id: 'abc', name: 'Монтаж радиатора', description: 'Описание <тест>', quantity: 1.5, priceKopecks: 123456, unit: 'шт', type: 'service', categoryId: 'heating' }];
 const settings: Settings = { address: 'ул. Тестовая <1>', discountPercent: 7 };
 
-test('serialized estimate contains versioned JSON, escaped HTML and embedded font', async () => {
+test('serialized estimate contains versioned JSON and escaped HTML', async () => {
   const html = await serializeEstimate(items, settings, 'Дом <1>');
   expect(html).toContain('id="estimate-data"');
   expect(html).toContain('Описание \\u003cтест\\u003e');
   expect(html).toContain('"version":1');
-  expect(html).toContain('data:font/woff;base64,');
+  expect(html).toContain('@font-face');
   expect(html).toContain('СЧЕТ №');
   expect(html).toContain('Наименование работ и услуг');
 });
@@ -29,7 +29,7 @@ describe('estimate format', () => {
     expect(loaded.settings.discountPercent).toBe(7);
   });
 
-  test('keeps section summary only when both item types exist', () => {
+  test('shows section totals only when both item types exist', () => {
     const onlyServices = createEstimateLayout(items, settings);
     expect(onlyServices.showSectionSummary).toBe(false);
     const both = createEstimateLayout([...items, { ...items[0], id: 'product', type: 'product' }], settings);
