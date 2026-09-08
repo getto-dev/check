@@ -21,6 +21,7 @@ interface State {
   addCatalogItem: (item: CatalogItem, qty?: number) => void;
   addManualItem: (item: Omit<InvoiceItem, 'id'>) => void;
   updateQuantity: (id: string, quantity: number) => void;
+  changeQuantity: (id: string, direction: -1 | 1) => void;
   removeItem: (id: string) => void;
   clearItems: () => void;
   updateSettings: (settings: Partial<Settings> & { discount?: number }) => void;
@@ -38,6 +39,7 @@ interface State {
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
 const normalizeQuantity = (value: number) => Math.max(0.1, Math.round(value * 100) / 100);
+const quantityStep = (quantity: number) => quantity < 1 ? 0.1 : 1;
 
 const normalizeSettings = (settings: Partial<Settings> & { discount?: number }): Settings => {
   const discountPercent = typeof settings.discount === 'number' ? settings.discount : settings.discountPercent;
@@ -89,6 +91,13 @@ export const useAppStore = create<State>()(
       addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
       addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, id: crypto.randomUUID() }] })),
       updateQuantity: (id, quantity) => set((state) => ({ items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity) } : item) })),
+      changeQuantity: (id, direction) => set((state) => ({
+        items: state.items.map((item) => {
+          if (item.id !== id) return item;
+          const step = quantityStep(item.quantity);
+          return { ...item, quantity: normalizeQuantity(item.quantity + direction * step) };
+        }),
+      })),
       removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clearItems: () => set({ items: [] }),
 
