@@ -81,7 +81,23 @@ export function InvoiceSection() {
     </header>
 
     {items.length === 0 ? <div className="text-center py-16 text-muted-foreground"><p className="text-lg font-bold text-foreground">Смета пуста</p><p>Добавьте позиции из каталога.</p></div> : <>
-      {items.map((item) => <div key={item.id} className="flex items-center gap-2 border-b border-border py-3"><div className="flex-1 min-w-0"><div className="font-bold truncate">{item.name}</div><div className="text-xs text-muted-foreground">{formatCurrency(item.priceKopecks)} / {item.unit}</div></div><div className="flex items-center gap-1"><button type="button" className="icon-button focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Уменьшить количество"><Minus size={15} /></button><span className="min-w-8 text-center font-bold">{formatQuantity(item.quantity)}</span><button type="button" className="icon-button focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Увеличить количество"><Plus size={15} /></button></div><div className="w-28 text-right font-extrabold">{formatCurrency(Math.round(item.priceKopecks * item.quantity))}</div><button type="button" className="icon-button focus-visible:ring-2 focus-visible:ring-ring" onClick={() => removeItem(item.id)} aria-label="Удалить"><Trash2 size={16} /></button></div>)}
+      <div className="space-y-2">
+        {items.map((item) => (
+          <div key={item.id} className="grid grid-cols-[minmax(0,1fr)_auto] gap-3 border-b border-border py-3 sm:flex sm:items-start">
+            <div className="min-w-0 sm:flex-1">
+              <div className="font-bold leading-snug break-words">{item.name}</div>
+              <div className="mt-1 text-xs text-muted-foreground break-words">{formatCurrency(item.priceKopecks)} / {item.unit}</div>
+            </div>
+            <div className="row-start-2 col-start-1 flex items-center gap-1 sm:row-auto sm:col-auto">
+              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label="Уменьшить количество"><Minus size={15} /></button>
+              <span className="min-w-9 text-center font-bold">{formatQuantity(item.quantity)}</span>
+              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label="Увеличить количество"><Plus size={15} /></button>
+            </div>
+            <div className="col-start-2 row-start-2 self-center min-w-0 text-right font-extrabold sm:w-28 sm:self-start sm:pt-2">{formatCurrency(Math.round(item.priceKopecks * item.quantity))}</div>
+            <button type="button" className="icon-button col-start-2 row-start-1 justify-self-end w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => removeItem(item.id)} aria-label="Удалить"><Trash2 size={16} /></button>
+          </div>
+        ))}
+      </div>
       <div className="rounded-2xl bg-card border border-border p-4 space-y-2">
         <div className="total-line"><span>Работы</span><span>{formatCurrency(totals.servicesKopecks)}</span></div>
         <div className="total-line"><span>Материалы</span><span>{formatCurrency(totals.productsKopecks)}</span></div>
