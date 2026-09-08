@@ -18,10 +18,7 @@
   --color-ring: #8b5cf6;
 }
 
-:root {
-  color-scheme: light;
-}
-
+:root { color-scheme: light; }
 .dark {
   --color-background: #11101a;
   --color-foreground: #f4f4f5;
@@ -52,6 +49,11 @@ button { cursor: pointer; }
 .safe-top { padding-top: max(0.625rem, env(safe-area-inset-top)); }
 .icon-button { width: 2rem; height: 2rem; display: inline-flex; align-items: center; justify-content: center; border: 1px solid var(--color-border); border-radius: 0.625rem; background: var(--color-card); color: var(--color-foreground); }
 .icon-button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.button { display: inline-flex; align-items: center; justify-content: center; gap: 0.5rem; border: 1px solid var(--color-border); background: var(--color-card); color: var(--color-foreground); padding: 0.625rem 0.875rem; border-radius: 0.75rem; font-weight: 600; }
+.button:hover { border-color: var(--color-primary); color: var(--color-primary); }
+.button:disabled { cursor: not-allowed; opacity: 0.5; }
+.total-line { display: flex; justify-content: space-between; margin: 0.375rem 0; }
+.grand { font-size: 1.25rem; font-weight: 900; }
 
 @media print {
   .no-print { display: none !important; }
