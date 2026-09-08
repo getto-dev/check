@@ -14,6 +14,8 @@ const NumberInput = memo(function NumberInput({ label, value, onChange, min }: {
   const generatedId = useId();
   const inputId = `number-${generatedId.replace(/:/g, '')}`;
   const [displayValue, setDisplayValue] = useState(String(value));
+  // The input intentionally keeps local text while the user edits it (including transient empty values).
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   useEffect(() => setDisplayValue(String(value)), [value]);
   return <div className="space-y-2"><label htmlFor={inputId} className="text-[11px] font-bold uppercase tracking-widest text-muted-foreground block">{label}</label><input id={inputId} type="number" inputMode="decimal" step="any" value={displayValue} min={min} onChange={(event) => { setDisplayValue(event.target.value); const number = Number(event.target.value); if (Number.isFinite(number)) onChange(number); }} onBlur={() => { const number = Number(displayValue); const normalized = Number.isFinite(number) ? number : (min ?? 0); onChange(normalized); setDisplayValue(String(normalized)); }} className="w-full px-4 py-3.5 rounded-xl bg-card border-2 border-border font-bold focus:outline-none focus:border-primary focus-visible:ring-2 focus-visible:ring-ring" /></div>;
 });
