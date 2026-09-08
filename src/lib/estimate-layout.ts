@@ -1,6 +1,6 @@
 import type { InvoiceItem, Settings, Totals } from './types';
 import { calculateTotals } from './format';
-import { ESTIMATE_LAYOUT, MAX_DISCOUNT_PERCENT } from './constants';
+import { MAX_DISCOUNT_PERCENT } from './constants';
 
 export interface EstimateLayoutSection {
   type: InvoiceItem['type'];
@@ -21,7 +21,6 @@ export interface EstimateLayout {
   hasProducts: boolean;
   hasBothTypes: boolean;
   showSectionSummary: boolean;
-  constants: typeof ESTIMATE_LAYOUT;
 }
 
 export function createEstimateLayout(items: InvoiceItem[], settings: Settings, now = new Date()): EstimateLayout {
@@ -51,6 +50,5 @@ export function createEstimateLayout(items: InvoiceItem[], settings: Settings, n
     hasProducts,
     hasBothTypes,
     showSectionSummary: hasBothTypes,
-    constants: ESTIMATE_LAYOUT,
   };
 }
