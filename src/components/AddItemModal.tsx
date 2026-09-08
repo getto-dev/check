@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
@@ -14,11 +14,6 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
   const [priceRubles, setPriceRubles] = useState((item.priceKopecks / 100).toFixed(2));
   const priceKopecks = Math.max(0, Math.round((Number(priceRubles.replace(',', '.')) || 0) * 100));
   const totalKopecks = Math.round(priceKopecks * quantity);
-
-  useEffect(() => {
-    setQuantity(1);
-    setPriceRubles((item.priceKopecks / 100).toFixed(2));
-  }, [item.id, item.priceKopecks]);
 
   const changeQuantity = (delta: number) => setQuantity((current) => Math.max(0.1, Math.round((current + delta) * 10) / 10));
 
