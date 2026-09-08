@@ -116,39 +116,53 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
       const descriptionSize = 7;
       const nameLines = wrapText(item.name, font, nameSize, nameRight - xName - 12);
       const descLines = item.description ? wrapText(item.description, font, descriptionSize, nameRight - xName - 12) : [];
-      const lineHeight = 11;
-      const contentLines = nameLines.length + descLines.length;
-      const rowHeight = Math.max(25, contentLines * lineHeight + 8);
+      const nameLineHeight = 11;
+      const descLineHeight = 9;
+      const contentHeight = nameLines.length * nameLineHeight + descLines.length * descLineHeight;
+      const rowHeight = Math.max(28, contentHeight + 12);
       ensureSpace(rowHeight + 6);
 
-      nameLines.forEach((line, index) => text(line, xName, y - index * lineHeight, nameSize));
-      descLines.forEach((line, index) => text(line, xName, y - (nameLines.length + index) * 9 - 1, descriptionSize, MUTED));
+      const blockHeight = contentHeight;
+      const blockTopY = y + (rowHeight - 6 - blockHeight) / 2;
+      nameLines.forEach((line, index) => text(line, xName, blockTopY - index * nameLineHeight, nameSize));
+      const descStartY = blockTopY - nameLines.length * nameLineHeight - 1;
+      descLines.forEach((line, index) => text(line, xName, descStartY - index * descLineHeight, descriptionSize, MUTED));
 
       const qty = `${formatQuantity(item.quantity)} ${item.unit}`;
       const price = money(item.priceKopecks);
       const total = money(Math.round(item.priceKopecks * item.quantity));
-      const baseY = y;
-      text(qty, centeredTextX(font, qty, 8, qtyLeft, qtyRight), baseY, 8);
-      text(price, centeredTextX(font, price, 8, priceLeft, priceRight), baseY, 8);
-      text(total, centeredTextX(font, total, 8, totalLeft, totalRight), baseY, 8);
+      const valueY = y - (rowHeight - 6) / 2 + 3;
+      text(qty, centeredTextX(font, qty, 8, qtyLeft, qtyRight), valueY, 8);
+      text(price, centeredTextX(font, price, 8, priceLeft, priceRight), valueY, 8);
+      text(total, centeredTextX(font, total, 8, totalLeft, totalRight), valueY, 8);
 
-      page.drawLine({ start: { x: MARGIN_X, y: y - rowHeight + 6 }, end: { x: right, y: y - rowHeight + 6 }, thickness: 0.5, color: BORDER });
+      const lineY = y - rowHeight + 6;
+      page.drawLine({ start: { x: MARGIN_X, y: lineY }, end: { x: right, y: lineY }, thickness: 0.5, color: BORDER });
       y -= rowHeight;
     }
   };
 
-  page.drawLine({ start: { x: MARGIN_X, y }, end: { x: PAGE_WIDTH - MARGIN_X, y }, thickness: 2, color: BLUE });
-  y -= 18;
-  text(`СЧЕТ №${number}`, MARGIN_X, y, 17);
-  y -= 16;
+  const headerY = y;
+  page.drawLine({ start: { x: MARGIN_X, y: headerY }, end: { x: PAGE_WIDTH - MARGIN_X, y: headerY }, thickness: 2, color: BLUE });
+  y -= 17;
+
+  const title = `СЧЕТ №${number}`;
+  text(title, MARGIN_X, y, 10, TEXT);
   if (settings.address.trim()) {
-    const object = `Объект: ${settings.address.trim()}`;
-    const objectLines = wrapText(object, font, 8, PAGE_WIDTH - MARGIN_X * 2);
-    objectLines.slice(0, 2).forEach((line, index) => text(line, MARGIN_X, y - index * 10, 8, MUTED));
-    y -= objectLines.slice(0, 2).length * 10 + 8;
-  } else {
-    y -= 5;
+    const prefix = 'Объект: ';
+    const address = settings.address.trim();
+    const objectSize = 8;
+    const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(title, 10) - 18;
+    const fullObject = `${prefix}${address}`;
+    const objectLines = wrapText(fullObject, font, objectSize, Math.max(120, availableWidth));
+    const firstLine = objectLines.join(' ');
+    const visibleObject = font.widthOfTextAtSize(firstLine, objectSize) <= availableWidth
+      ? firstLine
+      : `${prefix}${address.slice(0, Math.max(1, Math.floor(address.length * 0.72)))}…`;
+    const titleWidth = font.widthOfTextAtSize(title, 10);
+    text(visibleObject, MARGIN_X + titleWidth + 18, y + 1, objectSize, MUTED);
   }
+  y -= 22;
 
   drawTable('РАБОТЫ И УСЛУГИ', services);
   drawTable('МАТЕРИАЛЫ И ТОВАРЫ', products);
