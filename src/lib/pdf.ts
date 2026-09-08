@@ -56,11 +56,10 @@ function money(value: number) {
 export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   if (typeof window === 'undefined' || !items.length) return;
 
-  const [fontBytes] = await Promise.all([loadFont()]);
+  const fontBytes = await loadFont();
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   const font = await pdf.embedFont(fontBytes, { subset: true });
-  const bold = font;
   const totals = calculateTotals(items, settings.discount);
   const services = items.filter((item) => item.type === 'service');
   const products = items.filter((item) => item.type === 'product');
@@ -92,7 +91,6 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     const xPrice = 456;
     const xTotal = 526;
     const right = PAGE_WIDTH - MARGIN_X;
-    const tableTop = y + 5;
     page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
     text('Наименование', xName, y - 19, 8, MUTED);
     text('Кол.', xQty, y - 19, 8, MUTED);
@@ -129,7 +127,6 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     text(label, xPrice - 48, y - 2, 8, MUTED);
     text(value, xTotal, y - 2, 8);
     y -= 23;
-    void tableTop;
   };
 
   page.drawLine({ start: { x: MARGIN_X, y }, end: { x: PAGE_WIDTH - MARGIN_X, y }, thickness: 3, color: BLUE });
