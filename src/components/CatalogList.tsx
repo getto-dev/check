@@ -1,5 +1,3 @@
-'use client';
-
 import { memo, useCallback, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
@@ -12,27 +10,27 @@ const CATEGORY_NAMES = new Map<string, string>(CATEGORIES.map((category) => [cat
 
 const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; onAdd: () => void; onOpen: () => void }) {
   return (
-    <article className="grid grid-cols-[minmax(0,1fr)_auto] sm:flex sm:items-center gap-x-3 gap-y-2 p-3.5 sm:p-4 rounded-2xl bg-card border border-border overflow-hidden">
+    <article className="group flex items-center gap-3 border-b border-border/70 py-3.5 sm:py-4">
       <button
         type="button"
-        className="min-w-0 w-full text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+        className="min-w-0 flex-1 text-left rounded-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         onClick={onOpen}
         aria-label={`Открыть ${item.name}`}
       >
-        <h3 className="font-bold leading-snug break-words line-clamp-2">{item.name}</h3>
+        <h3 className="font-bold leading-snug break-words">{item.name}</h3>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground break-words line-clamp-2">{item.description}</p>
-        <p className="text-[10px] leading-tight text-muted-foreground/70 uppercase mt-1.5 break-words">{CATEGORY_NAMES.get(item.categoryId)}</p>
+        <p className="text-[10px] leading-tight text-muted-foreground uppercase mt-1.5 break-words tracking-wide">{CATEGORY_NAMES.get(item.categoryId)}</p>
       </button>
 
-      <div className="row-start-1 col-start-2 flex items-center gap-2 sm:ml-auto">
+      <div className="shrink-0 flex items-center gap-3">
         <div className="text-right whitespace-nowrap">
           <div className="font-extrabold tabular-nums">{formatCurrency(item.priceKopecks)}</div>
-          <div className="text-[10px] text-muted-foreground">{item.unit}</div>
+          <div className="text-[10px] text-muted-foreground">за {item.unit}</div>
         </div>
         <button
           type="button"
           onClick={onAdd}
-          className="w-11 h-11 shrink-0 rounded-full gradient-bg text-white flex items-center justify-center touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="w-11 h-11 shrink-0 rounded-full gradient-bg text-white flex items-center justify-center touch-manipulation focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 transition-transform active:scale-95"
           aria-label={`Добавить ${item.name}`}
         >
           <Plus className="w-5 h-5" />
@@ -51,6 +49,6 @@ export const CatalogList = memo(function CatalogList() {
   const add = useCallback((item: CatalogItem) => addItem(item), [addItem]);
   const open = useCallback((item: CatalogItem) => openModal(item), [openModal]);
 
-  if (!items.length) return <div className="text-center py-16 text-muted-foreground">Ничего не найдено</div>;
-  return <div className="space-y-2" role="list">{items.map((item) => <div key={item.id} role="listitem"><Card item={item} onAdd={() => add(item)} onOpen={() => open(item)} /></div>)}</div>;
+  if (!items.length) return <div className="py-16 text-center text-muted-foreground">Ничего не найдено</div>;
+  return <div role="list" className="divide-border">{items.map((item) => <div key={item.id} role="listitem"><Card item={item} onAdd={() => add(item)} onOpen={() => open(item)} /></div>)}</div>;
 });
