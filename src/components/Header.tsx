@@ -1,5 +1,6 @@
-import { memo } from 'react';
+import { memo, useMemo } from 'react';
 import { useAppStore, formatCurrency } from '@/lib/store';
+import { calculateTotals } from '@/lib/format';
 import { FileText, Settings, ChevronLeft } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -7,8 +8,9 @@ export const Header = memo(function Header() {
   const currentTab = useAppStore((state) => state.currentTab);
   const setTab = useAppStore((state) => state.setTab);
   const items = useAppStore((state) => state.items);
+  const discountPercent = useAppStore((state) => state.settings.discountPercent);
   const hydrated = useAppStore((state) => state.hydrated);
-  const totals = useAppStore((state) => state.calculateTotals());
+  const totals = useMemo(() => calculateTotals(items, discountPercent), [items, discountPercent]);
   const count = items.length;
 
   return <header className="sticky top-0 z-50 bg-card/95 backdrop-blur-xl border-b border-border px-3 sm:px-4 py-2.5 sm:py-3 safe-top">
