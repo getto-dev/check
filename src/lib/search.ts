@@ -32,12 +32,11 @@ const score = (item: Pick<CatalogItem, 'name' | 'description'>, query: string) =
 
 type ScoredCatalogItem = CatalogItem & { score: number };
 
+const withoutScore = ({ score: _score, ...item }: ScoredCatalogItem): CatalogItem => item;
+
 export const searchCatalog = (catalog: Record<string, Service[]>, query: string, categoryId?: string): CatalogItem[] => Object.entries(catalog)
   .flatMap(([category, items]) => categoryId && category !== categoryId ? [] : items.map((item): CatalogItem => ({ id: item.id, categoryId: category, name: item.n, description: item.d, unit: item.u, priceKopecks: item.p * 100 })))
   .map((item): ScoredCatalogItem => ({ ...item, score: score(item, query) }))
   .filter((item) => item.score > 0)
   .sort((a, b) => b.score - a.score)
-  .map((item) => {
-    const { score: _score, ...result } = item;
-    return result;
-  });
+  .map(withoutScore);
