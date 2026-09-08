@@ -16,8 +16,8 @@ describe('calculateTotals', () => {
     expect(totals.grandTotalKopecks).toBe(330000);
   });
 
-  test('clamps invalid discounts', () => {
-    expect(calculateTotals(items, 150).grandTotalKopecks).toBe(150000);
+  test('clamps discounts to the application limit', () => {
+    expect(calculateTotals(items, 150).grandTotalKopecks).toBe(250000);
     expect(calculateTotals(items, -10).grandTotalKopecks).toBe(350000);
   });
 });
