@@ -101,7 +101,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
     position: fixed;
     left: 0;
     right: 0;
-    bottom: 0;
+    bottom: 58px;
     z-index: 40;
     display: block;
     background: color-mix(in srgb, var(--color-card) 94%, transparent);
@@ -113,7 +113,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
   .mobile-estimate-bar__button {
     width: 100%;
     min-height: 58px;
-    padding: 9px 14px max(9px, env(safe-area-inset-bottom));
+    padding: 9px 14px;
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -184,6 +184,17 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
     font-size: 9px;
     line-height: 1;
   }
-  .mobile-estimate-bar { bottom: 58px; }
+  .mobile-sheet-content {
+    top: auto !important;
+    bottom: 0 !important;
+    left: 50% !important;
+    width: min(100%, 40rem) !important;
+    max-height: 88dvh !important;
+    transform: translateX(-50%) !important;
+    margin: 0;
+    border-radius: 1.5rem 1.5rem 0 0 !important;
+    padding-bottom: max(1.25rem, env(safe-area-inset-bottom)) !important;
+    box-shadow: 0 -12px 40px rgba(15, 23, 42, 0.16);
+  }
   body { padding-bottom: 132px; }
 }
