@@ -30,11 +30,17 @@ jobs:
       - run: bun test
       - run: bun run lint
       - run: NEXT_PUBLIC_BASE_PATH=/checknew bun run build
-      - run: touch out/.nojekyll
+      - name: Verify Pages output
+        run: |
+          test -s out/index.html
+          test -f out/.nojekyll
+          test -n "$(find out/_next/static/chunks -name '*.js' -print -quit)"
+          grep -q '/checknew/' out/index.html
       - uses: actions/upload-pages-artifact@v5
         with:
           path: out
           retention-days: 1
+          include-hidden-files: true
 
   deploy:
     needs: build
@@ -43,35 +49,5 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Wait for GitHub Pages branch build
-        env:
-          GH_TOKEN: ${{ github.token }}
-          SHA: ${{ github.sha }}
-        run: |
-          found=0
-          for attempt in $(seq 1 60); do
-            run=$(gh api "repos/${GITHUB_REPOSITORY}/actions/workflows/352684197/runs?head_sha=${SHA}&per_page=1" --jq '.workflow_runs[0] // empty')
-            if [ -n "$run" ]; then
-              found=1
-              status=$(printf '%s' "$run" | jq -r '.status')
-              conclusion=$(printf '%s' "$run" | jq -r '.conclusion // ""')
-              echo "Pages branch build: status=$status conclusion=$conclusion"
-              if [ "$status" = "completed" ]; then
-                if [ "$conclusion" != "success" ]; then
-                  echo "Pages branch build failed"
-                  exit 1
-                fi
-                break
-              fi
-            else
-              echo "Waiting for Pages branch build to appear..."
-            fi
-            sleep 2
-          done
-          if [ "$found" -ne 1 ]; then
-            echo "Pages branch build did not appear in time"
-            exit 1
-          fi
-
       - id: deployment
         uses: actions/deploy-pages@v5
