@@ -24,58 +24,41 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
 
   return (
     <div className="space-y-5">
-      <div className="rounded-2xl bg-accent/60 border border-border p-4">
-        <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Цена по каталогу</p>
-        <p className="mt-1 text-xl font-extrabold">{formatCurrency(item.priceKopecks)} <span className="text-sm font-medium text-muted-foreground">/ {item.unit}</span></p>
+      <div className="flex items-end justify-between gap-4 border-b border-border pb-4">
+        <div>
+          <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">Цена по каталогу</p>
+          <p className="mt-1 text-2xl font-extrabold tabular-nums">{formatCurrency(item.priceKopecks)}</p>
+        </div>
+        <span className="pb-1 text-sm text-muted-foreground">за {item.unit}</span>
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
         <label className="block space-y-2">
           <span className="text-sm font-bold">Количество</span>
-          <div className="flex h-12 items-center rounded-xl border-2 border-border bg-card overflow-hidden focus-within:border-primary">
-            <button type="button" onClick={() => changeQuantity(-0.1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Уменьшить количество">
-              <Minus className="h-4 w-4" />
-            </button>
-            <input
-              type="number"
-              min="0.1"
-              step="0.1"
-              inputMode="decimal"
-              value={quantity}
-              onChange={(event) => setQuantity(Math.max(0.1, Number(event.target.value) || 0.1))}
-              className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold outline-none"
-              aria-label="Количество"
-            />
-            <button type="button" onClick={() => changeQuantity(0.1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Увеличить количество">
-              <Plus className="h-4 w-4" />
-            </button>
+          <div className="flex h-12 items-center rounded-xl border border-border bg-card overflow-hidden focus-within:border-primary">
+            <button type="button" onClick={() => changeQuantity(-0.1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Уменьшить количество"><Minus className="h-4 w-4" /></button>
+            <input type="number" min="0.1" step="0.1" inputMode="decimal" value={quantity} onChange={(event) => setQuantity(Math.max(0.1, Number(event.target.value) || 0.1))} className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold outline-none" aria-label="Количество" />
+            <button type="button" onClick={() => changeQuantity(0.1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Увеличить количество"><Plus className="h-4 w-4" /></button>
           </div>
         </label>
 
         <label className="block space-y-2">
           <span className="text-sm font-bold">Цена, ₽</span>
-          <div className="flex h-12 items-center rounded-xl border-2 border-border bg-card focus-within:border-primary px-3">
-            <input
-              type="text"
-              inputMode="decimal"
-              value={priceRubles}
-              onChange={(event) => setPriceRubles(event.target.value.replace(/[^\d.,]/g, '').replace(',', '.'))}
-              className="min-w-0 flex-1 bg-transparent text-base font-bold outline-none"
-              aria-label="Цена в рублях"
-            />
+          <div className="flex h-12 items-center rounded-xl border border-border bg-card focus-within:border-primary px-3">
+            <input type="text" inputMode="decimal" value={priceRubles} onChange={(event) => setPriceRubles(event.target.value.replace(/[^\d.,]/g, '').replace(',', '.'))} className="min-w-0 flex-1 bg-transparent text-base font-bold outline-none" aria-label="Цена в рублях" />
           </div>
         </label>
       </div>
 
-      <div className="rounded-2xl border border-border bg-muted p-4 flex items-center justify-between gap-4">
+      <div className="flex items-center justify-between gap-4 rounded-2xl bg-muted px-4 py-3.5">
         <div>
           <p className="text-xs font-semibold text-muted-foreground">Итого</p>
-          <p className="text-2xl font-extrabold">{formatCurrency(totalKopecks)}</p>
+          <p className="text-2xl font-extrabold tabular-nums text-primary">{formatCurrency(totalKopecks)}</p>
         </div>
         <span className="text-sm text-muted-foreground text-right">{quantity} {item.unit}</span>
       </div>
 
-      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
+      <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-1">
         <Button type="button" variant="outline" className="min-h-11 rounded-xl" onClick={onClose}>Отмена</Button>
         <Button type="button" className="min-h-11 rounded-xl px-6" onClick={submit}>Добавить в смету</Button>
       </div>
@@ -92,7 +75,7 @@ export function AddItemModal() {
 
   return (
     <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <DialogContent className="max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-3xl p-5 sm:p-6 shadow-2xl sm:max-w-xl">
+      <DialogContent className="mobile-sheet-content max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-3xl p-5 sm:max-w-xl sm:p-6 shadow-2xl">
         <DialogHeader className="pr-9">
           <DialogTitle className="text-xl sm:text-2xl font-extrabold leading-tight break-words">{modalItem.name}</DialogTitle>
           <DialogDescription className="leading-relaxed">{modalItem.description}</DialogDescription>
