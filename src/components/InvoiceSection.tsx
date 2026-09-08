@@ -12,7 +12,7 @@ import { useToast } from '@/components/ui/toast';
 export function InvoiceSection() {
   const items = useAppStore((state) => state.items);
   const settings = useAppStore((state) => state.settings);
-  const updateQuantity = useAppStore((state) => state.updateQuantity);
+  const changeQuantity = useAppStore((state) => state.changeQuantity);
   const removeItem = useAppStore((state) => state.removeItem);
   const clearItems = useAppStore((state) => state.clearItems);
   const loadEstimateData = useAppStore((state) => state.loadEstimateData);
@@ -90,9 +90,9 @@ export function InvoiceSection() {
               <div className="mt-1 text-xs text-muted-foreground break-words">{formatCurrency(item.priceKopecks)} / {item.unit}{item.description && <span> · {item.description}</span>}</div>
             </div>
             <div className="row-start-2 col-start-1 flex items-center gap-1 sm:row-auto sm:col-auto">
-              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity - 1)} aria-label={`Уменьшить количество позиции ${index + 1}`}><Minus size={15} /></button>
+              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => changeQuantity(item.id, -1)} aria-label={`Уменьшить количество позиции ${index + 1}`}><Minus size={15} /></button>
               <span className="min-w-9 text-center font-bold tabular-nums">{formatQuantity(item.quantity)}</span>
-              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => updateQuantity(item.id, item.quantity + 1)} aria-label={`Увеличить количество позиции ${index + 1}`}><Plus size={15} /></button>
+              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => changeQuantity(item.id, 1)} aria-label={`Увеличить количество позиции ${index + 1}`}><Plus size={15} /></button>
             </div>
             <div className="col-start-2 row-start-2 self-center text-right font-extrabold tabular-nums sm:row-auto sm:col-auto sm:w-28">{formatCurrency(Math.round(item.priceKopecks * item.quantity))}</div>
             <button type="button" className="icon-button col-start-2 row-start-1 justify-self-end w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => removeItem(item.id)} aria-label={`Удалить позицию ${index + 1}`}><Trash2 size={16} /></button>
