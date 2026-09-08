@@ -1,45 +1,8 @@
 import type { CatalogItem } from './types';
-
-const RU_STOP_WORDS = new Set(['с','в','на','по','и','к','о','у','за','из','от','до','для','без','под','над','при','через','а','но','или','не','же','бы','ли','как']);
-const SUFFIXES = ['ого','ему','ому','ыми','ими','ость','ости','ами','ями','ая','ее','ие','ий','им','их','ую','юю','ое','ые','ый','ым','ов','ев','ей','ой','ам','ям','ах','ях','ом','ем','а','е','и','о','у','ы','ю','ь'];
-const STEM_ALIASES: Record<string, string[]> = {
-  тепл: ['теплый','теплого','теплому','теплом','теплая'],
-  труб: ['труба','трубы','трубу','трубой','трубопровод'],
-  насо: ['насос','насоса','насосу','насосом'],
-  радиат: ['радиатор','радиатора','радиатором','радиаторы'],
-  смесит: ['смеситель','смесителя','смесителем','смесители'],
-  канализ: ['канализация','канализации','канализацией'],
-  водоснаб: ['водоснабжение','водоснабжения','водоснабжением'],
-  отоплен: ['отопление','отопления','отоплением'],
-};
-
-export const normalizeWord = (word: string): string => {
-  let value = word.toLowerCase().replace(/ё/g, 'е');
-  for (const suffix of SUFFIXES) {
-    if (value.endsWith(suffix) && value.length - suffix.length >= 3) return value.slice(0, -suffix.length);
-  }
-  return value;
-};
-
-export const tokenizeQuery = (query: string): string[] => query.toLowerCase().trim().split(/\s+/).filter(Boolean).filter((token) => !RU_STOP_WORDS.has(token)).map(normalizeWord);
-
-const wordMatches = (stem: string, text: string): boolean => {
-  const normalized = text.toLowerCase().replace(/ё/g, 'е');
-  if (normalized.includes(stem)) return true;
-  const aliases = STEM_ALIASES[stem] ?? [];
-  return aliases.some((alias) => normalized.includes(alias));
-};
-
-export const searchCatalog = (catalog: CatalogItem[], query: string): CatalogItem[] => {
-  const tokens = tokenizeQuery(query);
-  if (!tokens.length) return [...catalog];
-  return catalog.map((item) => {
-    let score = 0;
-    for (const token of tokens) {
-      if (wordMatches(token, item.name)) score += 10;
-      else if (wordMatches(token, item.description)) score += 4;
-      else if (item.name.includes(token)) score += 2;
-    }
-    return { item, score };
-  }).filter(({ score }) => score > 0).sort((a, b) => b.score - a.score).map(({ item }) => item);
-};
+import type { Service } from './catalog';
+const STOP_WORDS=new Set(['с','в','на','по','и','к','о','у','за','из','от','до','для','без','под','над','при','через','а','но','или','не','же','бы','ли','уже','ещё','так','как','что','это','то','все']);
+const SUFFIXES=['ого','ому','ыми','ими','ость','ости','остью','ами','ями','ая','ее','ие','ий','им','их','ую','юю','ое','ые','ый','ым','ов','ев','ей','ой','ам','ям','ах','ях','ом','ем','а','е','и','о','у','ы','ю','ь'];
+export const stem=(word:string)=>{let r=word.toLowerCase();for(const s of SUFFIXES){if(r.endsWith(s)&&r.length-s.length>=3){r=r.slice(0,-s.length);break}}return r};
+export const tokenizeQuery=(query:string)=>query.toLowerCase().trim().split(/\s+/).filter(Boolean).filter(x=>!STOP_WORDS.has(x)).map(x=>stem(x.replace(/[0-9øØ°№]/g,''))).filter(x=>x.length>=2);
+const score=(item:CatalogItem|Service,q:string)=>{if(!q.trim())return 1;const text=`${item.n} ${item.d}`.toLowerCase();return tokenizeQuery(q).reduce((s,t)=>s+(text.includes(t)?(item.n.toLowerCase().includes(t)?10:4):0),0)};
+export const searchCatalog=(catalog:Record<string,Service[]>,query:string,categoryId?:string):CatalogItem[]=>Object.entries(catalog).flatMap(([cat,items])=>categoryId&&cat!==categoryId?[]:items.map(i=>({id:i.id,categoryId:cat,name:i.n,description:i.d,unit:i.u,priceKopecks:i.p*100}))).map(i=>({...i,__score:score({n:i.name,d:i.description,u:i.unit,id:i.id,p:i.priceKopecks/100},query)})).filter(i=>i.__score>0).sort((a,b)=>b.__score-a.__score).map(({__score:_,...i})=>i);
