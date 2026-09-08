@@ -43,7 +43,6 @@ html { min-height: 100%; font-family: Inter, system-ui, -apple-system, BlinkMacS
 body { min-height: 100dvh; margin: 0; background: var(--color-background); color: var(--color-foreground); }
 button, input, select { font: inherit; }
 button { cursor: pointer; }
-
 .gradient-bg { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); }
 .gradient-text { background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%); -webkit-background-clip: text; background-clip: text; color: transparent; }
 .safe-top { padding-top: max(0.625rem, env(safe-area-inset-top)); }
@@ -55,7 +54,36 @@ button { cursor: pointer; }
 .total-line { display: flex; justify-content: space-between; margin: 0.375rem 0; }
 .grand { font-size: 1.25rem; font-weight: 900; }
 
+.print-only { display: none; }
+
 @media print {
-  .no-print { display: none !important; }
-  body { background: #fff; color: #000; }
+  @page { size: A4 portrait; margin: 12mm 14mm; }
+  .screen-only, .no-print { display: none !important; }
+  .print-only { display: block !important; }
+  html, body { background: #fff !important; color: #111 !important; }
+  body { min-height: auto; }
+  .print-estimate { width: 100%; font-family: Arial, "DejaVu Sans", sans-serif; font-size: 11px; line-height: 1.35; color: #222; }
+  .print-header { display: flex; justify-content: space-between; align-items: flex-start; gap: 20px; padding-bottom: 10px; margin-bottom: 16px; border-bottom: 2px solid #2388c9; }
+  .print-title { font-size: 18px; font-weight: 800; color: #2388c9; letter-spacing: 0.2px; }
+  .print-date { margin-top: 3px; font-size: 10px; color: #777; }
+  .print-object { max-width: 48%; text-align: right; font-size: 11px; color: #222; }
+  .print-object span { font-size: 9px; color: #777; }
+  .print-table-section { margin: 0 0 16px; break-inside: auto; }
+  .print-section-title { margin: 0 0 5px; font-size: 9px; font-weight: 800; letter-spacing: 0.4px; }
+  .print-table { width: 100%; border-collapse: collapse; table-layout: fixed; }
+  .print-table th, .print-table td { padding: 6px 6px; border-bottom: 1px solid #ddd; vertical-align: top; }
+  .print-table thead th { font-size: 9px; font-weight: 700; text-align: left; border-bottom: 1.5px solid #222; }
+  .print-table th:nth-child(1), .print-table td:nth-child(1) { width: 63%; }
+  .print-table th:nth-child(2), .print-table td:nth-child(2) { width: 12%; text-align: center; }
+  .print-table th:nth-child(3), .print-table td:nth-child(3) { width: 12%; text-align: right; }
+  .print-table th:nth-child(4), .print-table td:nth-child(4) { width: 13%; text-align: right; }
+  .print-table td { font-size: 10px; }
+  .print-table td strong { display: block; font-weight: 700; }
+  .print-table td small { display: block; margin-top: 2px; color: #666; font-size: 9px; }
+  .print-table tr { break-inside: avoid; }
+  .print-subtotal { padding: 7px 10px; margin-top: 4px; text-align: right; background: #f5f5f5; font-size: 9px; }
+  .print-totals { margin: 22px 0 0 auto; width: min(330px, 100%); padding-top: 10px; border-top: 2px solid #2388c9; }
+  .print-total-row { display: flex; justify-content: space-between; gap: 12px; padding: 4px 0; }
+  .print-total-final { display: flex; justify-content: space-between; gap: 12px; margin-top: 7px; padding-top: 8px; border-top: 1px solid #ddd; font-size: 12px; font-weight: 800; }
+  .print-total-final strong { color: #2388c9; font-size: 15px; }
 }
