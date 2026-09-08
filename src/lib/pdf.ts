@@ -3,7 +3,8 @@
 import { PDFDocument, rgb } from 'pdf-lib';
 import fontkit from '@pdf-lib/fontkit';
 import type { InvoiceItem, Settings } from './types';
-import { calculateTotals, formatCurrency, formatQuantity } from './format';
+import { formatCurrency, formatQuantity } from './format';
+import { createEstimateLayout } from './estimate-layout';
 
 const PAGE_WIDTH = 595.28;
 const PAGE_HEIGHT = 841.89;
@@ -64,15 +65,11 @@ function rightTextX(font: { widthOfTextAtSize: (text: string, size: number) => n
 export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   if (typeof window === 'undefined' || !items.length) return;
 
+  const layout = createEstimateLayout(items, settings);
   const fontBytes = await loadFont();
   const pdf = await PDFDocument.create();
   pdf.registerFontkit(fontkit);
   const font = await pdf.embedFont(fontBytes, { subset: true });
-  const totals = calculateTotals(items, settings.discount);
-  const services = items.filter((item) => item.type === 'service');
-  const products = items.filter((item) => item.type === 'product');
-  const now = new Date();
-  const number = `${String(now.getFullYear()).slice(-2)}${String(now.getMonth() + 1).padStart(2, '0')}${String(now.getDate()).padStart(2, '0')}-01`;
 
   let page = pdf.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   let y = PAGE_HEIGHT - TOP;
@@ -101,9 +98,7 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
     const totalLeft = 500;
     const totalRight = PAGE_WIDTH - MARGIN_X;
     const right = PAGE_WIDTH - MARGIN_X;
-    const headerLabel = title === 'РАБОТЫ И УСЛУГИ'
-      ? 'Наименование работ и услуг'
-      : 'Наименование материалов и товаров';
+    const headerLabel = title;
 
     page.drawLine({ start: { x: MARGIN_X, y: y - 4 }, end: { x: right, y: y - 4 }, thickness: 1, color: BLUE });
     const headerY = y - 18;
@@ -147,11 +142,11 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   page.drawLine({ start: { x: MARGIN_X, y: headerY }, end: { x: PAGE_WIDTH - MARGIN_X, y: headerY }, thickness: 2, color: BLUE });
   y -= 17;
 
-  const documentTitle = `СЧЕТ №${number}`;
+  const documentTitle = `СЧЕТ №${layout.number}`;
   text(documentTitle, MARGIN_X, y, 10, TEXT);
-  if (settings.address.trim()) {
+  if (layout.address) {
     const prefix = 'Объект: ';
-    const address = settings.address.trim();
+    const address = layout.address;
     const objectSize = 8;
     const availableWidth = PAGE_WIDTH - MARGIN_X * 2 - font.widthOfTextAtSize(documentTitle, 10) - 18;
     const fullObject = `${prefix}${address}`;
@@ -165,8 +160,9 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   }
   y -= 13;
 
-  drawTable('РАБОТЫ И УСЛУГИ', services);
-  drawTable('МАТЕРИАЛЫ И ТОВАРЫ', products);
+  for (const section of layout.sections) {
+    drawTable(section.title, section.items);
+  }
 
   ensureSpace(65);
   y -= 10;
@@ -175,25 +171,21 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   page.drawLine({ start: { x: summaryLeft, y }, end: { x: summaryRight, y }, thickness: 1.5, color: BLUE });
   y -= 15;
 
-  const hasServices = services.length > 0;
-  const hasProducts = products.length > 0;
-  const hasBothTypes = hasServices && hasProducts;
-
-  if (hasBothTypes) {
-    const serviceValue = money(totals.servicesKopecks);
+  if (layout.showSectionSummary) {
+    const serviceValue = money(layout.totals.servicesKopecks);
     text('Работы:', summaryLeft, y, 8, MUTED);
     text(serviceValue, rightTextX(font, serviceValue, 8, summaryRight), y, 8);
     y -= 13;
 
-    const productValue = money(totals.productsKopecks);
+    const productValue = money(layout.totals.productsKopecks);
     text('Материалы:', summaryLeft, y, 8, MUTED);
     text(productValue, rightTextX(font, productValue, 8, summaryRight), y, 8);
     y -= 13;
   }
 
-  if (totals.discountKopecks > 0) {
-    text(`Скидка ${settings.discount}%:`, summaryLeft, y, 8, MUTED);
-    const discountValue = `−${money(totals.discountKopecks)}`;
+  if (layout.totals.discountKopecks > 0) {
+    text(`Скидка ${layout.discountPercent}%:`, summaryLeft, y, 8, MUTED);
+    const discountValue = `−${money(layout.totals.discountKopecks)}`;
     text(discountValue, rightTextX(font, discountValue, 8, summaryRight), y, 8);
     y -= 15;
   } else {
@@ -203,14 +195,14 @@ export async function exportToPdf(items: InvoiceItem[], settings: Settings) {
   page.drawLine({ start: { x: summaryLeft, y: y + 3 }, end: { x: summaryRight, y: y + 3 }, thickness: 0.7, color: BORDER });
   y -= 11;
   text('ИТОГО К ОПЛАТЕ:', summaryLeft, y, 10, BLUE);
-  const grand = money(totals.grandTotalKopecks);
+  const grand = money(layout.totals.grandTotalKopecks);
   text(grand, rightTextX(font, grand, 13, summaryRight), y - 1, 13, BLUE);
 
   const bytes = await pdf.save();
   const arrayBuffer = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength) as ArrayBuffer;
   const blob = new Blob([arrayBuffer], { type: 'application/pdf' });
   const url = URL.createObjectURL(blob);
-  const filename = `Smeta_${number}.pdf`;
+  const filename = `Smeta_${layout.number}.pdf`;
   const anchor = document.createElement('a');
   anchor.href = url;
   anchor.download = filename;
