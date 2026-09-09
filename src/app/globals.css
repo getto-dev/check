@@ -62,7 +62,7 @@ input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-i
 .total-line { display: flex; justify-content: space-between; margin: 0.375rem 0; }
 .grand { font-size: 1.25rem; font-weight: 900; color: var(--color-primary); }
 
-/* Professional Minimal: preserve the existing controls and flow while giving each surface a quieter, denser visual hierarchy. */
+/* Visual-only redesign. Existing controls, actions and navigation remain unchanged. */
 main { min-width: 0; }
 header { box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02); }
 .search-input { box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
@@ -77,6 +77,18 @@ header { box-shadow: 0 1px 0 rgba(15, 23, 42, 0.02); }
   header > div { max-width: 1180px !important; }
   main > section:first-child { max-width: 1180px !important; }
   main > section:first-child + section { max-width: 1180px !important; }
+
+  /* Split-view language is applied to the existing catalog/document surfaces independently; the tab flow itself is untouched. */
+  .screen-only { width: min(100%, 760px); margin-left: auto; margin-right: auto; padding-left: 0.5rem; padding-right: 0.5rem; }
+  .screen-only > header { padding: 1.25rem 0 1rem; border-bottom: 1px solid var(--color-border); }
+  .screen-only > header h2 { letter-spacing: -0.025em; }
+  .screen-only > header .button { min-height: 2.5rem; box-shadow: 0 1px 2px rgba(15, 23, 42, 0.03); }
+  .screen-only > div.space-y-0 > div { border-color: var(--color-border); }
+  .screen-only > div.space-y-0 > div:hover { background: color-mix(in srgb, var(--color-secondary) 32%, transparent); }
+}
+
+@media (min-width: 640px) and (max-width: 1023px) {
+  .screen-only { max-width: 900px; margin-left: auto; margin-right: auto; }
 }
 
 .mobile-nav, .mobile-estimate-bar { display: none; }
