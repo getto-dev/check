@@ -26,7 +26,7 @@ export default function HomePage() {
       case 'manual':
         return <ManualSection />;
       case 'settings':
-        return <SettingsSection />;
+        return <SettingsSection {...pwa} />;
       default:
         return <>
           <SearchSection onManualClick={() => setTab('manual')} />
@@ -35,7 +35,7 @@ export default function HomePage() {
           </section>
         </>;
     }
-  }, [currentTab, setTab]);
+  }, [currentTab, setTab, pwa]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
