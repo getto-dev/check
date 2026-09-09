@@ -75,7 +75,7 @@ export function AddItemModal() {
 
   return (
     <Dialog open={modalOpen} onOpenChange={(open) => !open && closeModal()}>
-      <DialogContent className="mobile-sheet-content max-h-[calc(100dvh-1rem)] overflow-y-auto rounded-3xl p-5 sm:max-w-xl sm:p-6 shadow-2xl">
+      <DialogContent className="mobile-sheet-content !left-0 !right-0 !top-auto !bottom-0 !w-[100vw] !max-w-none !translate-x-0 !translate-y-0 max-h-[88dvh] overflow-y-auto rounded-3xl p-5 sm:!left-1/2 sm:!right-auto sm:!top-1/2 sm:!bottom-auto sm:!w-[calc(100%-2rem)] sm:!max-w-xl sm:!-translate-x-1/2 sm:!-translate-y-1/2 sm:max-h-[calc(100dvh-1rem)] sm:p-6 shadow-2xl">
         <DialogHeader className="pr-9">
           <DialogTitle className="text-xl sm:text-2xl font-extrabold leading-tight break-words">{modalItem.name}</DialogTitle>
           <DialogDescription className="leading-relaxed">{modalItem.description}</DialogDescription>
