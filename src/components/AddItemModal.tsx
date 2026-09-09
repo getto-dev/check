@@ -5,7 +5,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Button } from './ui/button';
 import { useAppStore } from '@/lib/store';
 import { normalizeQuantity } from '@/lib/quantity-rules';
-import { formatCurrency } from '@/lib/format';
+import { formatCurrency, formatQuantity } from '@/lib/format';
 import { QuantityStepper } from './QuantityStepper';
 import type { CatalogItem } from '@/lib/types';
 
