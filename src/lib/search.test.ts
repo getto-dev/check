@@ -7,7 +7,16 @@ const CATALOG_ITEMS: CatalogItem[] = [
   { id: 'sewer_001', name: 'Труба Ø110 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 63000, categoryId: 'sewerage' },
   { id: 'sewer_002', name: 'Труба Ø50 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 45000, categoryId: 'sewerage' },
   { id: 'plumb_001', name: 'Смеситель', description: 'Установка на раковину', unit: 'шт', priceKopecks: 225000, categoryId: 'plumbing' },
+  { id: 'electric_001', name: 'Установка розетки', description: 'Подключение и монтаж розетки', unit: 'шт', priceKopecks: 150000, categoryId: 'electrical' },
 ];
+
+const SYNONYMS = {
+  schemaVersion: 1,
+  groups: [
+    ['монтаж', 'установка', 'подключение'],
+    ['розетка', 'розеточный блок'],
+  ],
+};
 
 describe('search', () => {
   test('normalizes Russian query words', () => {
@@ -37,5 +46,11 @@ describe('search', () => {
 
   test('returns no results when any query token is absent', () => {
     expect(searchCatalog(CATALOG_ITEMS, 'радиатор несуществующийterm')).toEqual([]);
+  });
+
+  test('uses profile synonyms when searching', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'монтаж розетки', undefined, SYNONYMS);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe('electric_001');
   });
 });
