@@ -1,11 +1,15 @@
 import { describe, expect, test } from 'bun:test';
-import { searchCatalog, tokenizeQuery } from './search';
 import { CATALOG } from './catalog';
+import { searchCatalog, stem, tokenizeQuery } from './search';
 
 describe('search', () => {
   test('normalizes Russian query words', () => {
-    expect(tokenizeQuery('монтаж радиатора')).toContain('монтаж');
-    expect(tokenizeQuery('монтаж радиатора')).toContain('радиатор');
+    expect(stem('радиатора')).toBe('радиатор');
+    expect(tokenizeQuery('монтаж радиатора')).toEqual(['монтаж', 'радиатор']);
+  });
+
+  test('ignores stop words and preserves numeric dimensions', () => {
+    expect(tokenizeQuery('монтаж на 110')).toEqual(['монтаж', '110']);
   });
 
   test('returns the full catalog when query is empty', () => {
@@ -15,6 +19,17 @@ describe('search', () => {
 
   test('finds dimension-specific plumbing services', () => {
     const result = searchCatalog(CATALOG, 'труба 110');
-    expect(result.some((item) => item.name.includes('110'))).toBe(true);
+    expect(result.length).toBeGreaterThan(0);
+    expect(result.every((item) => item.name.includes('110'))).toBe(true);
+  });
+
+  test('filters by category', () => {
+    const result = searchCatalog(CATALOG, '', 'heating');
+    expect(result.length).toBe(CATALOG.heating.length);
+    expect(result.every((item) => item.categoryId === 'heating')).toBe(true);
+  });
+
+  test('returns no results when any query token is absent', () => {
+    expect(searchCatalog(CATALOG, 'радиатор несуществующийterm')).toEqual([]);
   });
 });
