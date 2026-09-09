@@ -5,6 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { CatalogItem, InvoiceItem, Settings, ThemeMode, TabType } from './types';
 import { calculateTotals } from './format';
 import { MAX_DISCOUNT_PERCENT } from './constants';
+import { changeQuantity, normalizeQuantity } from './quantity';
 
 interface State {
   items: InvoiceItem[];
@@ -38,15 +39,22 @@ interface State {
 }
 
 const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(max, value));
-const isDiscreteUnit = (unit: string) => unit.trim().toLowerCase() === 'шт';
-const normalizeQuantity = (value: number, unit = 'шт') => {
-  const minimum = isDiscreteUnit(unit) ? 1 : 0.1;
-  return Math.max(minimum, Math.round(value * 100) / 100);
-};
-const quantityStep = (quantity: number, unit: string, direction: -1 | 1) => {
-  if (isDiscreteUnit(unit)) return 1;
-  if (direction === -1) return quantity > 1 ? 1 : 0.1;
-  return quantity >= 1 ? 1 : 0.1;
+
+const isInvoiceItem = (value: unknown): value is InvoiceItem => {
+  if (!value || typeof value !== 'object') return false;
+  const item = value as Record<string, unknown>;
+  return typeof item.id === 'string'
+    && typeof item.name === 'string'
+    && typeof item.description === 'string'
+    && typeof item.quantity === 'number'
+    && Number.isFinite(item.quantity)
+    && typeof item.priceKopecks === 'number'
+    && Number.isInteger(item.priceKopecks)
+    && item.priceKopecks >= 0
+    && typeof item.unit === 'string'
+    && (item.type === 'service' || item.type === 'product')
+    && typeof item.categoryId === 'string'
+    && (item.catalogId === undefined || typeof item.catalogId === 'string');
 };
 
 const normalizeSettings = (settings: Partial<Settings> & { discount?: number }): Settings => {
@@ -73,9 +81,10 @@ export const useAppStore = create<State>()(
 
       addItem: (item, qty = 1, priceKopecks = item.priceKopecks) => set((state) => {
         const quantity = normalizeQuantity(qty, item.unit);
+        const safePriceKopecks = Number.isInteger(priceKopecks) && priceKopecks >= 0 ? priceKopecks : 0;
         const existing = state.items.find(
           (entry) => entry.catalogId === item.id
-            && entry.priceKopecks === priceKopecks
+            && entry.priceKopecks === safePriceKopecks
             && entry.type === 'service',
         );
         if (existing) {
@@ -88,7 +97,7 @@ export const useAppStore = create<State>()(
             name: item.name,
             description: item.description,
             quantity,
-            priceKopecks,
+            priceKopecks: safePriceKopecks,
             unit: item.unit,
             type: 'service',
             categoryId: item.categoryId,
@@ -97,16 +106,16 @@ export const useAppStore = create<State>()(
       }),
 
       addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
-      addManualItem: (item) => set((state) => ({ items: [...state.items, { ...item, quantity: normalizeQuantity(item.quantity, item.unit), id: crypto.randomUUID() }] })),
+      addManualItem: (item) => set((state) => ({
+        items: [...state.items, { ...item, quantity: normalizeQuantity(item.quantity, item.unit), id: crypto.randomUUID() }],
+      })),
       updateQuantity: (id, quantity) => set((state) => ({
         items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity, item.unit) } : item),
       })),
       changeQuantity: (id, direction) => set((state) => ({
-        items: state.items.map((item) => {
-          if (item.id !== id) return item;
-          const step = quantityStep(item.quantity, item.unit, direction);
-          return { ...item, quantity: normalizeQuantity(item.quantity + direction * step, item.unit) };
-        }),
+        items: state.items.map((item) => item.id === id
+          ? { ...item, quantity: changeQuantity(item.quantity, item.unit, direction) }
+          : item),
       })),
       removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
       clearItems: () => set({ items: [] }),
@@ -121,7 +130,10 @@ export const useAppStore = create<State>()(
       setThemeMode: (mode) => set({ themeMode: mode }),
       setHydrated: (value) => set({ hydrated: value }),
       calculateTotals: () => calculateTotals(get().items, get().settings.discountPercent),
-      loadEstimateData: (items, settings) => set({ items: items.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })), settings: normalizeSettings(settings) }),
+      loadEstimateData: (items, settings) => set({
+        items: items.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })),
+        settings: normalizeSettings(settings),
+      }),
     }),
     {
       name: 'santehschet-storage-v3',
@@ -129,10 +141,13 @@ export const useAppStore = create<State>()(
       partialize: (state) => ({ items: state.items, settings: state.settings, themeMode: state.themeMode }),
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<State> | undefined;
+        const persistedItems = Array.isArray(persisted?.items)
+          ? persisted.items.filter(isInvoiceItem).map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) }))
+          : currentState.items;
         return {
           ...currentState,
           ...persisted,
-          items: persisted?.items?.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })) ?? currentState.items,
+          items: persistedItems,
           settings: normalizeSettings(persisted?.settings ?? currentState.settings),
         };
       },
