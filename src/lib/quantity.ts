@@ -9,11 +9,7 @@ export const normalizeQuantity = (value: number, unit = 'шт') => {
   return Math.max(minimum, Math.round(numeric * precision) / precision);
 };
 
-export const quantityStep = (quantity: number, unit: string, direction: -1 | 1) => {
-  if (isDiscreteUnit(unit)) return 1;
-  if (direction === -1) return quantity > 1 ? 1 : 0.1;
-  return quantity >= 1 ? 1 : 0.1;
-};
+export const quantityStep = (_quantity: number, unit: string, _direction: -1 | 1) => isDiscreteUnit(unit) ? 1 : 0.1;
 
 export const changeQuantity = (quantity: number, unit: string, direction: -1 | 1) => normalizeQuantity(
   quantity + direction * quantityStep(quantity, unit, direction),
