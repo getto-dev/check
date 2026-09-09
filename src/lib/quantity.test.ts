@@ -31,9 +31,9 @@ describe('universal quantity rules', () => {
     expect(changeQuantity(10, -1)).toBe(9.5);
   });
 
-  test('repairs an invalid current quantity before applying a button step', () => {
+  test('repairs a non-grid current quantity before applying a button step', () => {
     expect(changeQuantity(0.2, -1)).toBe(1);
     expect(changeQuantity(0.2, 1)).toBe(1.5);
-    expect(changeQuantity(2.3, -1)).toBe(1.5);
+    expect(changeQuantity(2.3, -1)).toBe(2);
   });
 });
