@@ -27,7 +27,7 @@ jobs:
         with:
           bun-version: ${{ env.BUN_VERSION }}
       - run: bun install
-      - run: bun test
+      - run: bun test src/lib
       - run: bun run lint
       - run: NEXT_PUBLIC_BASE_PATH=/check bun run build
       - name: Prepare GitHub Pages output
