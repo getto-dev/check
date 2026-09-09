@@ -91,13 +91,26 @@ export function useProfessionDataset() {
     let cancelled = false;
 
     const load = async () => {
+      // Load the cached profile first. This is what makes a previously opened
+      // catalog usable after a full page reload with no network connection.
+      const cached = await readCachedDataset(profileId);
+      if (cached && !cancelled) {
+        setDataset(cached);
+        setError(null);
+        setLoading(false);
+      }
+
       let index: Awaited<ReturnType<typeof fetchDatasetIndex>>;
       try {
         index = await fetchDatasetIndex();
         if (cancelled) return;
         setProfiles(index.profiles);
       } catch (loadError) {
-        if (!cancelled) {
+        if (!cancelled && cached) {
+          setUpdateAvailable(true);
+          setError(null);
+          setLoading(false);
+        } else if (!cancelled) {
           setError(loadError instanceof Error ? loadError.message : 'Не удалось загрузить список профилей');
           setLoading(false);
         }
@@ -116,12 +129,6 @@ export function useProfessionDataset() {
           setLoading(false);
         }
         return;
-      }
-
-      const cached = await readCachedDataset(profileId);
-      if (cached && !cancelled) {
-        setDataset(cached);
-        setLoading(false);
       }
 
       try {
