@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { changeQuantity, normalizeQuantity } from '@/lib/quantity-rules';
@@ -16,10 +16,21 @@ interface QuantityStepperProps {
 export function QuantityStepper({ value, onChange, className, label = 'Количество', valueLabel }: QuantityStepperProps) {
   const normalizedValue = normalizeQuantity(value);
   const [draft, setDraft] = useState(String(normalizedValue));
+  const lastAppliedValue = useRef(normalizedValue);
+
+  useEffect(() => {
+    // Sync externally changed values, but don't overwrite text while the user
+    // is editing and the parent value has not changed.
+    if (normalizedValue !== lastAppliedValue.current) {
+      setDraft(String(normalizedValue));
+      lastAppliedValue.current = normalizedValue;
+    }
+  }, [normalizedValue]);
 
   const applyValue = (nextValue: number) => {
     const normalized = normalizeQuantity(nextValue);
     setDraft(String(normalized));
+    lastAppliedValue.current = normalized;
     onChange(normalized);
   };
 
