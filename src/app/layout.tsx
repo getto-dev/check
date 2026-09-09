@@ -6,9 +6,9 @@ import { ToastProvider } from '@/components/ui/toast';
 const basePath = process.env.NEXT_PUBLIC_BASE_PATH ?? (process.env.NODE_ENV === 'production' ? '/check' : '');
 
 export const metadata: Metadata = {
-  title: 'СантехСчёт — калькулятор смет',
-  description: 'Offline-first калькулятор смет на сантехнические работы',
-  applicationName: 'СантехСчёт',
+  title: 'Smeta — калькулятор смет',
+  description: 'Offline-first калькулятор смет для разных профессий',
+  applicationName: 'Smeta',
   manifest: `${basePath}/manifest.json`,
 };
 
