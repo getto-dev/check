@@ -1,5 +1,4 @@
 import type { CatalogItem } from './types';
-import type { Service } from './catalog';
 
 const STOP_WORDS = new Set(['с', 'в', 'на', 'по', 'и', 'к', 'о', 'у', 'за', 'из', 'от', 'до', 'для', 'без', 'под', 'над', 'при', 'через', 'а', 'но', 'или', 'не', 'же', 'бы', 'ли', 'уже', 'ещё', 'так', 'как', 'что', 'это', 'то', 'все']);
 const SUFFIXES = ['ого', 'ому', 'ыми', 'ими', 'ость', 'ости', 'остью', 'ами', 'ями', 'ая', 'ее', 'ие', 'ий', 'им', 'их', 'ую', 'юю', 'ое', 'ые', 'ый', 'ым', 'ов', 'ев', 'ей', 'ой', 'ам', 'ям', 'ах', 'ях', 'ом', 'ем', 'а', 'е', 'и', 'о', 'у', 'ы', 'ю', 'ь'];
@@ -44,8 +43,8 @@ type ScoredCatalogItem = CatalogItem & { score: number };
 
 const withoutScore = ({ score: _score, ...item }: ScoredCatalogItem): CatalogItem => item;
 
-export const searchCatalog = (catalog: Record<string, Service[]>, query: string, categoryId?: string): CatalogItem[] => Object.entries(catalog)
-  .flatMap(([category, items]) => categoryId && category !== categoryId ? [] : items.map((item): CatalogItem => ({ id: item.id, categoryId: category, name: item.n, description: item.d, unit: item.u, priceKopecks: item.p * 100 })))
+export const searchCatalog = (catalog: CatalogItem[], query: string, categoryId?: string): CatalogItem[] => catalog
+  .filter((item) => !categoryId || item.categoryId === categoryId)
   .map((item): ScoredCatalogItem => ({ ...item, score: score(item, query) }))
   .filter((item) => item.score > 0)
   .sort((a, b) => b.score - a.score)
