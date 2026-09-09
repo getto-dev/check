@@ -1,6 +1,13 @@
 import { describe, expect, test } from 'bun:test';
-import { CATALOG } from './catalog';
 import { searchCatalog, stem, tokenizeQuery } from './search';
+import type { CatalogItem } from './types';
+
+const CATALOG_ITEMS: CatalogItem[] = [
+  { id: 'heat_001', name: 'Монтаж радиатора', description: 'Сборка и установка радиатора', unit: 'шт', priceKopecks: 400000, categoryId: 'heating' },
+  { id: 'sewer_001', name: 'Труба Ø110 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 63000, categoryId: 'sewerage' },
+  { id: 'sewer_002', name: 'Труба Ø50 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 45000, categoryId: 'sewerage' },
+  { id: 'plumb_001', name: 'Смеситель', description: 'Установка на раковину', unit: 'шт', priceKopecks: 225000, categoryId: 'plumbing' },
+];
 
 describe('search', () => {
   test('normalizes Russian query words', () => {
@@ -13,23 +20,22 @@ describe('search', () => {
   });
 
   test('returns the full catalog when query is empty', () => {
-    const all = Object.values(CATALOG).reduce((sum, items) => sum + items.length, 0);
-    expect(searchCatalog(CATALOG, '')).toHaveLength(all);
+    expect(searchCatalog(CATALOG_ITEMS, '')).toHaveLength(CATALOG_ITEMS.length);
   });
 
   test('finds dimension-specific plumbing services', () => {
-    const result = searchCatalog(CATALOG, 'труба 110');
-    expect(result.length).toBeGreaterThan(0);
-    expect(result.every((item) => item.name.includes('110'))).toBe(true);
+    const result = searchCatalog(CATALOG_ITEMS, 'труба 110');
+    expect(result).toHaveLength(1);
+    expect(result[0]?.name).toContain('110');
   });
 
   test('filters by category', () => {
-    const result = searchCatalog(CATALOG, '', 'heating');
-    expect(result.length).toBe(CATALOG.heating.length);
+    const result = searchCatalog(CATALOG_ITEMS, '', 'heating');
+    expect(result).toHaveLength(1);
     expect(result.every((item) => item.categoryId === 'heating')).toBe(true);
   });
 
   test('returns no results when any query token is absent', () => {
-    expect(searchCatalog(CATALOG, 'радиатор несуществующийterm')).toEqual([]);
+    expect(searchCatalog(CATALOG_ITEMS, 'радиатор несуществующийterm')).toEqual([]);
   });
 });
