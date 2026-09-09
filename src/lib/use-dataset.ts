@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { DatasetCategory, DatasetIndexEntry, ProfessionDataset } from './dataset';
 import { fetchProfessionDataset, fetchDatasetIndex } from './dataset-loader';
 import { readCachedDataset, writeCachedDataset } from './dataset-cache';
@@ -30,15 +30,62 @@ export function useProfessionDataset() {
   const [dataset, setDataset] = useState<ProfessionDataset | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [updateAvailable, setUpdateAvailable] = useState(false);
+  const [checkingUpdate, setCheckingUpdate] = useState(false);
+  const [updating, setUpdating] = useState(false);
 
-  const selectProfile = (nextProfileId: string) => {
+  const selectProfile = useCallback((nextProfileId: string) => {
     if (!nextProfileId || nextProfileId === profileId) return;
     writeActiveProfile(nextProfileId);
     setProfileIdState(nextProfileId);
     setDataset(null);
     setError(null);
+    setUpdateAvailable(false);
     setLoading(true);
-  };
+  }, [profileId]);
+
+  const findActiveEntry = useCallback((index: Awaited<ReturnType<typeof fetchDatasetIndex>>) => (
+    index.profiles.find((profile) => profile.id === profileId)
+  ), [profileId]);
+
+  const checkForDatasetUpdate = useCallback(async () => {
+    if (!navigator.onLine) throw new Error('Нет подключения к интернету');
+    setCheckingUpdate(true);
+    try {
+      const index = await fetchDatasetIndex();
+      setProfiles(index.profiles);
+      const entry = findActiveEntry(index);
+      if (!entry) throw new Error('Активный профиль не найден');
+      const available = Boolean(
+        dataset
+        && (dataset.version !== entry.version || (entry.itemCount !== undefined && dataset.items.length !== entry.itemCount)),
+      );
+      setUpdateAvailable(available);
+      return available;
+    } finally {
+      setCheckingUpdate(false);
+    }
+  }, [dataset, findActiveEntry]);
+
+  const updateDataset = useCallback(async () => {
+    if (!navigator.onLine) throw new Error('Нет подключения к интернету');
+    setUpdating(true);
+    try {
+      const index = await fetchDatasetIndex();
+      setProfiles(index.profiles);
+      const entry = findActiveEntry(index);
+      if (!entry) throw new Error('Активный профиль не найден');
+      const remote = await fetchProfessionDataset(entry.manifest);
+      if (remote.id !== profileId) throw new Error('Получен каталог другого профиля');
+      setDataset(remote);
+      setError(null);
+      setUpdateAvailable(false);
+      await writeCachedDataset(remote);
+      return remote;
+    } finally {
+      setUpdating(false);
+    }
+  }, [findActiveEntry, profileId]);
 
   useEffect(() => {
     let cancelled = false;
@@ -57,7 +104,7 @@ export function useProfessionDataset() {
         return;
       }
 
-      const entry: DatasetIndexEntry | undefined = index.profiles.find((profile) => profile.id === profileId);
+      const entry = index.profiles.find((profile) => profile.id === profileId);
       if (!entry) {
         if (profileId !== DEFAULT_PROFILE_ID) {
           writeActiveProfile(DEFAULT_PROFILE_ID);
@@ -84,17 +131,22 @@ export function useProfessionDataset() {
           && (entry.itemCount === undefined || cached.items.length === entry.itemCount),
         );
 
-        if (cachedIsCurrent) return;
+        if (cachedIsCurrent) {
+          if (!cancelled) setUpdateAvailable(false);
+          return;
+        }
 
         const remote = await fetchProfessionDataset(entry.manifest);
         if (cancelled) return;
         setDataset(remote);
         setError(null);
+        setUpdateAvailable(false);
         setLoading(false);
         await writeCachedDataset(remote);
       } catch (loadError) {
         if (cancelled) return;
         if (cached) {
+          setUpdateAvailable(true);
           setError(null);
           setLoading(false);
         } else {
@@ -132,6 +184,11 @@ export function useProfessionDataset() {
     categories,
     loading,
     error,
+    updateAvailable,
+    checkingUpdate,
+    updating,
     selectProfile,
+    checkForDatasetUpdate,
+    updateDataset,
   };
 }
