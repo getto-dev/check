@@ -6,12 +6,26 @@ export const DATASET_INDEX_URL =
 export const DATASET_BASE_URL =
   'https://raw.githubusercontent.com/getto-dev/check-data/main/';
 
+const FETCH_TIMEOUT_MS = 15_000;
+
 async function fetchJson<T>(url: string): Promise<T> {
-  const response = await fetch(url, { cache: 'no-store' });
-  if (!response.ok) {
-    throw new Error(`Dataset request failed: ${response.status}`);
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), FETCH_TIMEOUT_MS);
+
+  try {
+    const response = await fetch(url, { cache: 'no-store', signal: controller.signal });
+    if (!response.ok) {
+      throw new Error(`Dataset request failed: ${response.status}`);
+    }
+    return response.json() as Promise<T>;
+  } catch (error) {
+    if (error instanceof DOMException && error.name === 'AbortError') {
+      throw new Error(`Dataset request timed out after ${FETCH_TIMEOUT_MS / 1000}s`);
+    }
+    throw error;
+  } finally {
+    clearTimeout(timeout);
   }
-  return response.json() as Promise<T>;
 }
 
 export async function fetchDatasetIndex(): Promise<DatasetIndex> {
@@ -36,7 +50,7 @@ export async function fetchDatasetManifest(manifestPath: string) {
   }>(new URL(manifestPath, DATASET_BASE_URL).toString());
 }
 
-function validateSynonyms(value: unknown): DatasetSynonyms | undefined {
+export function validateSynonyms(value: unknown): DatasetSynonyms | undefined {
   if (value === undefined) return undefined;
   if (!value || typeof value !== 'object') throw new Error('Invalid synonyms structure');
 
@@ -57,7 +71,7 @@ function validateSynonyms(value: unknown): DatasetSynonyms | undefined {
   };
 }
 
-function validateDataset(dataset: ProfessionDataset) {
+export function validateDataset(dataset: ProfessionDataset): ProfessionDataset {
   if (dataset.schemaVersion !== 1) throw new Error('Unsupported dataset schema version');
   if (!dataset.id || !dataset.name || !dataset.version || !dataset.locale || !dataset.currency) {
     throw new Error('Invalid dataset metadata');
