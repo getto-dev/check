@@ -1,7 +1,7 @@
 import { memo, useCallback, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { searchCatalog } from '@/lib/search';
+import { searchCatalog, type SearchSynonyms } from '@/lib/search';
 import { formatCurrency } from '@/lib/format';
 import type { CatalogItem } from '@/lib/types';
 import type { DatasetCategory } from '@/lib/dataset';
@@ -38,13 +38,22 @@ const Card = memo(function Card({ item, categoryName, onAdd, onOpen }: { item: C
   );
 });
 
-export const CatalogList = memo(function CatalogList({ catalogItems, categories }: { catalogItems: CatalogItem[]; categories: DatasetCategory[] }) {
+interface CatalogListProps {
+  catalogItems: CatalogItem[];
+  categories: DatasetCategory[];
+  synonyms?: SearchSynonyms;
+}
+
+export const CatalogList = memo(function CatalogList({ catalogItems, categories, synonyms }: CatalogListProps) {
   const searchQuery = useAppStore((state) => state.searchQuery);
   const selectedCategory = useAppStore((state) => state.selectedCategory);
   const addItem = useAppStore((state) => state.addItem);
   const openModal = useAppStore((state) => state.openModal);
   const categoryNames = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories]);
-  const items = useMemo(() => searchCatalog(catalogItems, searchQuery, selectedCategory ?? undefined), [catalogItems, searchQuery, selectedCategory]);
+  const items = useMemo(
+    () => searchCatalog(catalogItems, searchQuery, selectedCategory ?? undefined, synonyms),
+    [catalogItems, searchQuery, selectedCategory, synonyms],
+  );
   const add = useCallback((item: CatalogItem) => addItem(item), [addItem]);
   const open = useCallback((item: CatalogItem) => openModal(item), [openModal]);
 
