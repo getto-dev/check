@@ -21,13 +21,23 @@ export const tokenizeQuery = (query: string) => query
   .split(/\s+/)
   .filter(Boolean)
   .filter((word) => !STOP_WORDS.has(word))
-  .map((word) => stem(word.replace(/[0-9øØ°№]/g, '')))
+  .map((word) => {
+    const normalized = word.replace(/[øØ№]/g, '');
+    return /^\d+(?:[.,]\d+)?$/.test(normalized) ? normalized.replace(',', '.') : stem(normalized);
+  })
   .filter((word) => word.length >= 2);
 
 const score = (item: Pick<CatalogItem, 'name' | 'description'>, query: string) => {
-  if (!query.trim()) return 1;
-  const text = `${item.name} ${item.description}`.toLowerCase();
-  return tokenizeQuery(query).reduce((total, token) => total + (text.includes(token) ? (item.name.toLowerCase().includes(token) ? 10 : 4) : 0), 0);
+  const tokens = tokenizeQuery(query);
+  if (!tokens.length) return query.trim() ? 0 : 1;
+
+  const name = item.name.toLowerCase();
+  const description = item.description.toLowerCase();
+  const text = `${name} ${description}`;
+  const matchesAll = tokens.every((token) => text.includes(token));
+  if (!matchesAll) return 0;
+
+  return tokens.reduce((total, token) => total + (name.includes(token) ? 10 : 4), 0);
 };
 
 type ScoredCatalogItem = CatalogItem & { score: number };
