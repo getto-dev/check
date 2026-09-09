@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { changeQuantity, normalizeQuantity } from '@/lib/quantity-rules';
@@ -17,8 +17,6 @@ export function QuantityStepper({ value, onChange, className, label = 'Коли�
   const normalizedValue = normalizeQuantity(value);
   const [draft, setDraft] = useState(String(normalizedValue));
 
-  useEffect(() => setDraft(String(normalizedValue)), [normalizedValue]);
-
   const applyValue = (nextValue: number) => {
     const normalized = normalizeQuantity(nextValue);
     setDraft(String(normalized));
@@ -27,7 +25,6 @@ export function QuantityStepper({ value, onChange, className, label = 'Коли�
 
   const decrease = () => applyValue(changeQuantity(normalizedValue, -1));
   const increase = () => applyValue(changeQuantity(normalizedValue, 1));
-
   const handleInputChange = (input: string) => setDraft(input);
 
   const handleInputBlur = () => {
