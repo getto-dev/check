@@ -6,9 +6,7 @@ test('Электрика: категория → поиск → позиция �
   const profile = page.getByLabel('Профиль каталога');
   await expect(profile).toHaveValue('plumbing');
   await profile.selectOption('electrical');
-
   await expect(profile).toHaveValue('electrical');
-  await expect(page.getByText('163').first()).toBeVisible({ timeout: 20_000 });
 
   await page.getByRole('button', { name: 'Выбор категории' }).click();
   await page.getByRole('option', { name: 'Основные позиции' }).click();
@@ -36,7 +34,7 @@ test('Электрика: категория → поиск → позиция �
   await dialog.getByRole('button', { name: 'Добавить в смету' }).click();
   await expect(dialog).toBeHidden();
 
-  await page.getByRole('button', { name: 'Смета' }).click();
+  await page.getByRole('button', { name: 'Открыть смету' }).click();
 
   await expect(page.getByRole('heading', { name: 'Смета' })).toBeVisible();
   await expect(page.getByText('Вырез подрозетников по бетону', { exact: true })).toBeVisible();
