@@ -3,7 +3,7 @@
 import { useMemo, useRef, useState } from 'react';
 import { FolderOpen, Save, Printer, Trash2, RotateCcw } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { calculateTotals, formatCurrency, formatQuantity } from '@/lib/format';
+import { calculateTotals, formatCurrency } from '@/lib/format';
 import { exportToPdf } from '@/lib/pdf';
 import { loadEstimateFromFile, saveEstimateToFile, EstimateFileError } from '@/lib/estimate-format';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
