@@ -1,5 +1,5 @@
 const VERSION = '__VERSION__';
-const CACHE = `santehschet-${VERSION}`;
+const CACHE = `smeta-${VERSION}`;
 const OFFLINE = './offline.html';
 const STATIC_ASSETS = [OFFLINE, './', './fonts/roboto-all-400-normal.woff'];
 
