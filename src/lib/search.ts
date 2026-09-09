@@ -29,7 +29,9 @@ export const tokenizeQuery = (query: string) => query
   .filter((word) => !STOP_WORDS.has(word))
   .map((word) => {
     const normalized = word.replace(/[øØ№]/g, '');
-    return /^\d+(?:[.,]\d+)?$/.test(normalized) ? normalized.replace(',', '.') : stem(normalized);
+    return /^(?:\d+(?:[.,]\d+)?)(?:[xх×]\d+(?:[.,]\d+)?)*$/.test(normalized)
+      ? normalized.replace(',', '.')
+      : stem(normalized);
   })
   .filter((word) => word.length >= 2);
 
@@ -66,7 +68,10 @@ const levenshtein = (a: string, b: string): number => {
   return previous[b.length] ?? 2;
 };
 
+const isNumericToken = (token: string) => /^\d+(?:[.]\d+)?(?:[xх×]\d+(?:[.]\d+)?)*$/.test(token);
+
 const tokenMatch = (textTokens: string[], queryToken: string) => {
+  if (isNumericToken(queryToken)) return textTokens.some((token) => token === queryToken) ? 'exact' as const : 'none' as const;
   if (textTokens.some((token) => token.includes(queryToken))) return 'partial' as const;
   if (queryToken.length >= 4 && textTokens.some((token) => levenshtein(token, queryToken) <= 1)) return 'typo' as const;
   return 'none' as const;
@@ -113,7 +118,8 @@ const score = (
   return queryTokens.reduce((total, token) => {
     const nameMatch = tokenMatch(nameTokens, token);
     const allMatch = tokenMatch(allTokens, token);
-    if (nameTokens.includes(token)) return total + 30;
+    if (nameTokens.includes(token)) return total + (isNumericToken(token) ? 45 : 30);
+    if (nameMatch === 'exact') return total + 45;
     if (nameMatch === 'partial') return total + 22;
     if (nameMatch === 'typo') return total + 18;
     if (allMatch === 'partial') return total + 12;
