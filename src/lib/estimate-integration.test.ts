@@ -63,7 +63,7 @@ describe('estimate integration', () => {
 
     expect(data).toMatchObject({
       version: 1,
-      app: 'santeh-schet',
+      app: 'smeta',
       name: 'Объект №1',
       items,
       settings,
@@ -77,7 +77,7 @@ describe('estimate integration', () => {
 
     expect(imported).toEqual({
       version: 1,
-      app: 'santeh-schet',
+      app: 'smeta',
       name: 'Моя смета',
       items,
       settings: {
@@ -112,11 +112,11 @@ describe('estimate integration', () => {
       `<!doctype html><script type="application/json" id="estimate-data">${JSON.stringify(value)}</script>`,
     ], 'estimate.html');
 
-    await expect(loadEstimateFromFile(makeFile({ version: 2, app: 'santeh-schet' }))).rejects.toThrow(EstimateFileError);
+    await expect(loadEstimateFromFile(makeFile({ version: 2, app: 'smeta' }))).rejects.toThrow(EstimateFileError);
     await expect(loadEstimateFromFile(makeFile({ version: 1, app: 'other-app' }))).rejects.toThrow('Неподдерживаемая версия файла');
     await expect(loadEstimateFromFile(makeFile({
       version: 1,
-      app: 'santeh-schet',
+      app: 'smeta',
       items: [{ ...items[0], quantity: 0 }],
       settings,
     }))).rejects.toThrow('Список позиций сметы повреждён');
