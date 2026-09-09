@@ -1,4 +1,4 @@
-export const APP_VERSION = '24.1.0';
+export const APP_VERSION = '24.2.0';
 export const MAX_DISCOUNT_PERCENT = 50;
 
 export const ESTIMATE_LAYOUT = {
