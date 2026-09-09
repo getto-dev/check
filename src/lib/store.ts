@@ -136,8 +136,26 @@ export const useAppStore = create<State>()(
         settings: normalizeSettings(settings),
       }),
     }),
-    persist
-    ,
+    {
+      name: 'santehschet-storage-v3',
+      storage: createJSONStorage(() => localStorage),
+      partialize: (state) => ({ items: state.items, settings: state.settings, themeMode: state.themeMode }),
+      merge: (persistedState, currentState) => {
+        const persisted = persistedState as Partial<State> | undefined;
+        const persistedItems = Array.isArray(persisted?.items)
+          ? persisted.items.filter(isInvoiceItem).map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity) }))
+          : currentState.items;
+        return {
+          ...currentState,
+          ...persisted,
+          items: persistedItems,
+          settings: normalizeSettings(persisted?.settings ?? currentState.settings),
+        };
+      },
+      onRehydrateStorage: () => (state) => {
+        state?.setHydrated(true);
+      },
+    },
   ),
 );
 
