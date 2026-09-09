@@ -41,6 +41,6 @@ test('Электрика: категория → поиск → позиция �
   await expect(page.getByText('Вырез подрозетников по бетону', { exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Количество' })).toHaveValue('2.5');
 
-  await expect(estimateHeading.locator('..').getByText('1 125', { exact: false })).toBeVisible();
-  await expect(estimateHeading.locator('..').getByText('Итого', { exact: true })).toBeVisible();
+  const totalLine = page.getByText('Итого', { exact: true }).locator('..');
+  await expect(totalLine.getByText('1 125', { exact: false })).toBeVisible();
 });
