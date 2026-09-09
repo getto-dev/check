@@ -49,19 +49,32 @@ export function usePWA() {
       workerCleanups.push(() => worker.removeEventListener('statechange', onStateChange));
     };
 
+    const attachRegistration = (nextRegistration: ServiceWorkerRegistration) => {
+      if (registration === nextRegistration) return;
+      registration = nextRegistration;
+      updateFound = () => monitorWorker(registration?.installing ?? null);
+      registration.addEventListener('updatefound', updateFound);
+      monitorWorker(registration.waiting);
+      if (registration.waiting) {
+        setWaiting(registration.waiting);
+        setNeedsUpdate(true);
+      }
+    };
+
     const setupServiceWorker = async () => {
       if (!('serviceWorker' in navigator)) return;
       try {
-        registration = await navigator.serviceWorker.getRegistration();
-        if (!registration) return;
-
-        updateFound = () => monitorWorker(registration?.installing ?? null);
-        registration.addEventListener('updatefound', updateFound);
-        monitorWorker(registration.waiting);
-        if (registration.waiting) {
-          setWaiting(registration.waiting);
-          setNeedsUpdate(true);
+        const current = await navigator.serviceWorker.getRegistration();
+        if (current) {
+          attachRegistration(current);
+          return;
         }
+
+        // The registration script runs on window load, which can happen after
+        // this React effect. Wait for the browser's active registration so we
+        // don't miss the first updatefound event.
+        const ready = await navigator.serviceWorker.ready;
+        attachRegistration(ready);
       } catch (error) {
         console.error(error);
       }
