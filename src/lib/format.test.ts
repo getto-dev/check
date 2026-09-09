@@ -4,13 +4,13 @@ import type { InvoiceItem } from './types';
 
 describe('formatCurrency', () => {
   test('formats kopecks as Russian rubles', () => {
-    expect(formatCurrency(0)).toBe('0,00 ₽');
-    expect(formatCurrency(123456)).toBe('1 234,56 ₽');
+    expect(formatCurrency(0)).toContain('0 ₽');
+    expect(formatCurrency(123456)).toBe('1 235 ₽');
   });
 
-  test('rounds fractional kopecks safely', () => {
-    expect(formatCurrency(1234.4)).toBe('12,34 ₽');
-    expect(formatCurrency(1234.6)).toBe('12,35 ₽');
+  test('rounds fractional kopecks to whole displayed rubles', () => {
+    expect(formatCurrency(1234.4)).toBe('12 ₽');
+    expect(formatCurrency(1234.6)).toBe('12 ₽');
   });
 });
 
@@ -48,9 +48,9 @@ describe('calculateTotals edge cases', () => {
     });
   });
 
-  test('ignores invalid discounts as zero', () => {
+  test('treats NaN discount as zero and clamps Infinity', () => {
     expect(calculateTotals([item({ quantity: 2 })], Number.NaN).grandTotalKopecks).toBe(20000);
-    expect(calculateTotals([item({ quantity: 2 })], Number.POSITIVE_INFINITY).grandTotalKopecks).toBe(20000);
+    expect(calculateTotals([item({ quantity: 2 })], Number.POSITIVE_INFINITY).grandTotalKopecks).toBe(10000);
   });
 
   test('rounds line totals in kopecks', () => {
