@@ -37,7 +37,7 @@ export interface Totals {
 
 export interface EstimateFileV1 {
   version: 1;
-  app: 'santeh-schet';
+  app: 'smeta';
   name: string;
   items: InvoiceItem[];
   settings: Settings;
