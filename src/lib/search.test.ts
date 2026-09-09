@@ -6,6 +6,8 @@ const CATALOG_ITEMS: CatalogItem[] = [
   { id: 'heat_001', name: 'Монтаж радиатора', description: 'Сборка и установка радиатора', unit: 'шт', priceKopecks: 400000, categoryId: 'heating' },
   { id: 'sewer_001', name: 'Труба Ø110 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 63000, categoryId: 'sewerage' },
   { id: 'sewer_002', name: 'Труба Ø50 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 45000, categoryId: 'sewerage' },
+  { id: 'sewer_003', name: 'Труба Ø20 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 30000, categoryId: 'sewerage' },
+  { id: 'sewer_004', name: 'Труба Ø200 на стене', description: 'Прокладка трубы с фиксацией', unit: 'м.п', priceKopecks: 90000, categoryId: 'sewerage' },
   { id: 'plumb_001', name: 'Смеситель', description: 'Установка на раковину', unit: 'шт', priceKopecks: 225000, categoryId: 'plumbing' },
   { id: 'electric_001', name: 'Установка розетки', description: 'Подключение и монтаж розетки', unit: 'шт', priceKopecks: 150000, categoryId: 'electrical' },
 ];
@@ -33,6 +35,7 @@ describe('search', () => {
 
   test('ignores stop words and preserves numeric dimensions', () => {
     expect(tokenizeQuery('монтаж на 110')).toEqual(['монтаж', '110']);
+    expect(tokenizeQuery('труба 20x20')).toEqual(['труб', '20x20']);
   });
 
   test('returns the full catalog when query is empty', () => {
@@ -43,6 +46,12 @@ describe('search', () => {
     const result = searchCatalog(CATALOG_ITEMS, 'труба 110');
     expect(result).toHaveLength(1);
     expect(result[0]?.name).toContain('110');
+  });
+
+  test('prioritizes exact numeric dimensions over larger numbers', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'труба 20');
+    expect(result[0]?.id).toBe('sewer_003');
+    expect(result).toHaveLength(1);
   });
 
   test('filters by category', () => {
