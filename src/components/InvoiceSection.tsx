@@ -13,7 +13,7 @@ import { QuantityStepper } from '@/components/QuantityStepper';
 export function InvoiceSection() {
   const items = useAppStore((state) => state.items);
   const settings = useAppStore((state) => state.settings);
-  const changeQuantity = useAppStore((state) => state.changeQuantity);
+  const updateQuantity = useAppStore((state) => state.updateQuantity);
   const removeItem = useAppStore((state) => state.removeItem);
   const clearItems = useAppStore((state) => state.clearItems);
   const loadEstimateData = useAppStore((state) => state.loadEstimateData);
@@ -92,7 +92,7 @@ export function InvoiceSection() {
             </div>
             <QuantityStepper
               value={item.quantity}
-              onChange={(quantity) => useAppStore.getState().updateQuantity(item.id, quantity)}
+              onChange={(quantity) => updateQuantity(item.id, quantity)}
               className="row-start-2 col-start-1 sm:row-auto sm:col-auto sm:w-48"
               label="Количество"
               valueLabel={item.unit}
