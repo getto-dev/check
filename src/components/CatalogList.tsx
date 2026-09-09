@@ -1,14 +1,12 @@
 import { memo, useCallback, useMemo } from 'react';
 import { Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { CATEGORIES, CATALOG } from '@/lib/catalog';
 import { searchCatalog } from '@/lib/search';
 import { formatCurrency } from '@/lib/format';
 import type { CatalogItem } from '@/lib/types';
+import type { DatasetCategory } from '@/lib/dataset';
 
-const CATEGORY_NAMES = new Map<string, string>(CATEGORIES.map((category) => [category.id, category.name]));
-
-const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; onAdd: () => void; onOpen: () => void }) {
+const Card = memo(function Card({ item, categoryName, onAdd, onOpen }: { item: CatalogItem; categoryName?: string; onAdd: () => void; onOpen: () => void }) {
   return (
     <article className="group flex items-center gap-3 border-b border-border/70 py-3.5 sm:py-4">
       <button
@@ -19,7 +17,7 @@ const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; on
       >
         <h3 className="font-bold leading-snug break-words">{item.name}</h3>
         <p className="mt-1 text-xs leading-relaxed text-muted-foreground break-words line-clamp-2">{item.description}</p>
-        <p className="text-[10px] leading-tight text-muted-foreground uppercase mt-1.5 break-words tracking-wide">{CATEGORY_NAMES.get(item.categoryId)}</p>
+        <p className="text-[10px] leading-tight text-muted-foreground uppercase mt-1.5 break-words tracking-wide">{categoryName}</p>
       </button>
 
       <div className="shrink-0 flex items-center gap-3">
@@ -40,15 +38,16 @@ const Card = memo(function Card({ item, onAdd, onOpen }: { item: CatalogItem; on
   );
 });
 
-export const CatalogList = memo(function CatalogList() {
+export const CatalogList = memo(function CatalogList({ catalogItems, categories }: { catalogItems: CatalogItem[]; categories: DatasetCategory[] }) {
   const searchQuery = useAppStore((state) => state.searchQuery);
   const selectedCategory = useAppStore((state) => state.selectedCategory);
   const addItem = useAppStore((state) => state.addItem);
   const openModal = useAppStore((state) => state.openModal);
-  const items = useMemo(() => searchCatalog(CATALOG, searchQuery, selectedCategory ?? undefined), [searchQuery, selectedCategory]);
+  const categoryNames = useMemo(() => new Map(categories.map((category) => [category.id, category.name])), [categories]);
+  const items = useMemo(() => searchCatalog(catalogItems, searchQuery, selectedCategory ?? undefined), [catalogItems, searchQuery, selectedCategory]);
   const add = useCallback((item: CatalogItem) => addItem(item), [addItem]);
   const open = useCallback((item: CatalogItem) => openModal(item), [openModal]);
 
   if (!items.length) return <div className="py-16 text-center text-muted-foreground">Ничего не найдено</div>;
-  return <div role="list" className="divide-border">{items.map((item) => <div key={item.id} role="listitem"><Card item={item} onAdd={() => add(item)} onOpen={() => open(item)} /></div>)}</div>;
+  return <div role="list" className="divide-border">{items.map((item) => <div key={item.id} role="listitem"><Card item={item} categoryName={categoryNames.get(item.categoryId)} onAdd={() => add(item)} onOpen={() => open(item)} /></div>)}</div>;
 });
