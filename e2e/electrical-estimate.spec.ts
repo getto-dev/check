@@ -36,9 +36,11 @@ test('Электрика: категория → поиск → позиция �
 
   await page.getByRole('button', { name: 'Открыть смету' }).click();
 
-  await expect(page.getByRole('heading', { name: 'Смета' })).toBeVisible();
+  const estimateHeading = page.getByRole('heading', { name: 'Смета' });
+  await expect(estimateHeading).toBeVisible();
   await expect(page.getByText('Вырез подрозетников по бетону', { exact: true })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Количество' })).toHaveValue('2.5');
-  await expect(page.getByText('1 125', { exact: false }).last()).toBeVisible();
-  await expect(page.getByText('Итого', { exact: true })).toBeVisible();
+
+  await expect(estimateHeading.locator('..').getByText('1 125', { exact: false })).toBeVisible();
+  await expect(estimateHeading.locator('..').getByText('Итого', { exact: true })).toBeVisible();
 });
