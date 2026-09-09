@@ -23,12 +23,13 @@ export default function HomePage() {
   const setSearchQuery = useAppStore((state) => state.setSearchQuery);
   const pwa = usePWA();
   const dataset = useProfessionDataset();
+  const selectProfile = dataset.selectProfile;
 
   const handleProfileChange = useCallback((profileId: string) => {
     setCategory(null);
     setSearchQuery('');
-    dataset.selectProfile(profileId);
-  }, [dataset.selectProfile, setCategory, setSearchQuery]);
+    selectProfile(profileId);
+  }, [selectProfile, setCategory, setSearchQuery]);
 
   const content = useMemo(() => {
     switch (currentTab) {
@@ -64,7 +65,7 @@ export default function HomePage() {
           </section>
         </>;
     }
-  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.dataset, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, dataset.updateAvailable, dataset.checkingUpdate, dataset.updating, dataset.checkForDatasetUpdate, dataset.updateDataset, handleProfileChange, pwa, setTab]);
+  }, [currentTab, dataset, handleProfileChange, pwa, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
