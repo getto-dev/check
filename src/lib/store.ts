@@ -82,10 +82,11 @@ export const useAppStore = create<State>()(
       addItem: (item, qty = 1, priceKopecks = item.priceKopecks) => set((state) => {
         const quantity = normalizeQuantity(qty);
         const safePriceKopecks = Number.isInteger(priceKopecks) && priceKopecks >= 0 ? priceKopecks : 0;
+        const type = item.type ?? 'service';
         const existing = state.items.find(
           (entry) => entry.catalogId === item.id
             && entry.priceKopecks === safePriceKopecks
-            && entry.type === 'service',
+            && entry.type === type,
         );
         if (existing) {
           return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) } : entry) };
@@ -99,7 +100,7 @@ export const useAppStore = create<State>()(
             quantity,
             priceKopecks: safePriceKopecks,
             unit: item.unit,
-            type: 'service',
+            type,
             categoryId: item.categoryId,
           }],
         };
@@ -135,26 +136,8 @@ export const useAppStore = create<State>()(
         settings: normalizeSettings(settings),
       }),
     }),
-    {
-      name: 'santehschet-storage-v3',
-      storage: createJSONStorage(() => localStorage),
-      partialize: (state) => ({ items: state.items, settings: state.settings, themeMode: state.themeMode }),
-      merge: (persistedState, currentState) => {
-        const persisted = persistedState as Partial<State> | undefined;
-        const persistedItems = Array.isArray(persisted?.items)
-          ? persisted.items.filter(isInvoiceItem).map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity) }))
-          : currentState.items;
-        return {
-          ...currentState,
-          ...persisted,
-          items: persistedItems,
-          settings: normalizeSettings(persisted?.settings ?? currentState.settings),
-        };
-      },
-      onRehydrateStorage: () => (state) => {
-        state?.setHydrated(true);
-      },
-    },
+    persist
+    ,
   ),
 );
 
