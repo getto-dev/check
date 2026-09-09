@@ -5,15 +5,9 @@ import { Minus, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { useAppStore } from '@/lib/store';
+import { changeQuantity, isDiscreteUnit, normalizeQuantity, quantityStep } from '@/lib/quantity';
 import { formatCurrency } from '@/lib/format';
 import type { CatalogItem } from '@/lib/types';
-
-const isDiscreteUnit = (unit: string) => unit.trim().toLowerCase() === 'шт';
-const normalizeQuantity = (value: number, unit: string) => {
-  const minimum = isDiscreteUnit(unit) ? 1 : 0.1;
-  const precision = isDiscreteUnit(unit) ? 1 : 10;
-  return Math.max(minimum, Math.round(value * precision) / precision);
-};
 
 function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void }) {
   const addItem = useAppStore((state) => state.addItem);
@@ -22,10 +16,10 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
   const priceKopecks = Math.max(0, Math.round((Number(priceRubles.replace(',', '.')) || 0) * 100));
   const totalKopecks = Math.round(priceKopecks * quantity);
   const discrete = isDiscreteUnit(item.unit);
-  const quantityStep = discrete ? 1 : 0.1;
+  const step = quantityStep(quantity, item.unit, 1);
 
-  const changeQuantity = (direction: -1 | 1) => {
-    setQuantity((current) => normalizeQuantity(current + direction * quantityStep, item.unit));
+  const updateQuantity = (direction: -1 | 1) => {
+    setQuantity((current) => changeQuantity(current, item.unit, direction));
   };
 
   const handleQuantityChange = (value: string) => {
@@ -53,9 +47,9 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
         <label className="block space-y-2">
           <span className="text-sm font-bold">Количество</span>
           <div className="flex h-12 items-center rounded-xl border border-border bg-card overflow-hidden focus-within:border-primary">
-            <button type="button" onClick={() => changeQuantity(-1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Уменьшить количество"><Minus className="h-4 w-4" /></button>
-            <input type="number" min={discrete ? 1 : 0.1} step={quantityStep} inputMode={discrete ? 'numeric' : 'decimal'} value={quantity} onChange={(event) => handleQuantityChange(event.target.value)} className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold outline-none" aria-label="Количество" />
-            <button type="button" onClick={() => changeQuantity(1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Увеличить количество"><Plus className="h-4 w-4" /></button>
+            <button type="button" onClick={() => updateQuantity(-1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Уменьшить количество"><Minus className="h-4 w-4" /></button>
+            <input type="number" min={discrete ? 1 : 0.1} step={step} inputMode={discrete ? 'numeric' : 'decimal'} value={quantity} onChange={(event) => handleQuantityChange(event.target.value)} className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold outline-none" aria-label="Количество" />
+            <button type="button" onClick={() => updateQuantity(1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Увеличить количество"><Plus className="h-4 w-4" /></button>
           </div>
         </label>
 
