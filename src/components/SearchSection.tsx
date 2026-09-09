@@ -3,10 +3,10 @@
 import { memo, useCallback, useEffect, useRef, useState } from 'react';
 import { Check, ChevronDown, Search, X, Plus } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
-import { CATEGORIES } from '@/lib/catalog';
+import type { DatasetCategory } from '@/lib/dataset';
 import { cn } from '@/lib/utils';
 
-export const SearchSection = memo(function SearchSection({ onManualClick }: { onManualClick: () => void }) {
+export const SearchSection = memo(function SearchSection({ onManualClick, categories }: { onManualClick: () => void; categories: DatasetCategory[] }) {
   const selectedCategory = useAppStore((state) => state.selectedCategory);
   const setCategory = useAppStore((state) => state.setCategory);
   const searchQuery = useAppStore((state) => state.searchQuery);
@@ -16,9 +16,9 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
   const categoryRef = useRef<HTMLDivElement>(null);
   const optionRefs = useRef<Array<HTMLButtonElement | null>>([]);
 
-  const selectedIndex = selectedCategory ? CATEGORIES.findIndex((category) => category.id === selectedCategory) + 1 : 0;
+  const selectedIndex = selectedCategory ? categories.findIndex((category) => category.id === selectedCategory) + 1 : 0;
   const displayIndex = selectedIndex >= 0 ? selectedIndex : 0;
-  const selectedLabel = displayIndex === 0 ? 'Все категории' : CATEGORIES[displayIndex - 1]?.name ?? 'Все категории';
+  const selectedLabel = displayIndex === 0 ? 'Все категории' : categories[displayIndex - 1]?.name ?? 'Все категории';
 
   const closeCategory = useCallback(() => {
     setCategoryOpen(false);
@@ -26,16 +26,16 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
   }, [displayIndex]);
 
   const selectCategory = useCallback((index: number) => {
-    setCategory(index === 0 ? null : CATEGORIES[index - 1]?.id ?? null);
+    setCategory(index === 0 ? null : categories[index - 1]?.id ?? null);
     setCategoryOpen(false);
     setActiveIndex(index);
-  }, [setCategory]);
+  }, [categories, setCategory]);
 
   const handleCategoryKeyDown = useCallback((event: React.KeyboardEvent<HTMLButtonElement>) => {
     if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
       event.preventDefault();
       setCategoryOpen(true);
-      setActiveIndex((index) => event.key === 'ArrowDown' ? Math.min(index + 1, CATEGORIES.length) : Math.max(index - 1, 0));
+      setActiveIndex((index) => event.key === 'ArrowDown' ? Math.min(index + 1, categories.length) : Math.max(index - 1, 0));
       return;
     }
     if (event.key === 'Enter' || event.key === ' ') {
@@ -47,7 +47,7 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
       event.preventDefault();
       closeCategory();
     }
-  }, [closeCategory]);
+  }, [categories.length, closeCategory]);
 
   useEffect(() => {
     if (!categoryOpen) return;
@@ -63,8 +63,8 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
         event.preventDefault();
         setActiveIndex((index) => {
           if (event.key === 'Home') return 0;
-          if (event.key === 'End') return CATEGORIES.length;
-          return event.key === 'ArrowDown' ? Math.min(index + 1, CATEGORIES.length) : Math.max(index - 1, 0);
+          if (event.key === 'End') return categories.length;
+          return event.key === 'ArrowDown' ? Math.min(index + 1, categories.length) : Math.max(index - 1, 0);
         });
       }
       if (event.key === 'Enter' || event.key === ' ') {
@@ -78,7 +78,7 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
       document.removeEventListener('pointerdown', handlePointerDown);
       document.removeEventListener('keydown', handleKeyDown);
     };
-  }, [activeIndex, categoryOpen, closeCategory, selectCategory]);
+  }, [activeIndex, categories.length, categoryOpen, closeCategory, selectCategory]);
 
   useEffect(() => {
     if (categoryOpen) optionRefs.current[activeIndex]?.scrollIntoView({ block: 'nearest' });
@@ -106,7 +106,7 @@ export const SearchSection = memo(function SearchSection({ onManualClick }: { on
 
         {categoryOpen && <div id="category-listbox" role="listbox" aria-label="Категории услуг" className="absolute z-30 left-0 right-0 mt-2 max-h-[min(60vh,24rem)] overflow-y-auto overscroll-contain rounded-xl border border-border bg-card p-1 shadow-xl">
           <button ref={(element) => { optionRefs.current[0] = element; }} type="button" role="option" aria-selected={selectedIndex === 0} onClick={() => selectCategory(0)} className={cn('w-full min-h-11 px-3 rounded-lg flex items-center justify-between gap-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', activeIndex === 0 && 'bg-accent')}><span>Все категории</span>{selectedIndex === 0 && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}</button>
-          {CATEGORIES.map((category, index) => { const optionIndex = index + 1; const selected = selectedCategory === category.id; return <button key={category.id} ref={(element) => { optionRefs.current[optionIndex] = element; }} type="button" role="option" aria-selected={selected} onClick={() => selectCategory(optionIndex)} className={cn('w-full min-h-11 px-3 rounded-lg flex items-center justify-between gap-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', activeIndex === optionIndex && 'bg-accent')}><span>{category.name}</span>{selected && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}</button>; })}
+          {categories.map((category, index) => { const optionIndex = index + 1; const selected = selectedCategory === category.id; return <button key={category.id} ref={(element) => { optionRefs.current[optionIndex] = element; }} type="button" role="option" aria-selected={selected} onClick={() => selectCategory(optionIndex)} className={cn('w-full min-h-11 px-3 rounded-lg flex items-center justify-between gap-3 text-left text-sm font-semibold focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring', activeIndex === optionIndex && 'bg-accent')}><span>{category.name}</span>{selected && <Check className="w-4 h-4 shrink-0" aria-hidden="true" />}</button>; })}
         </div>}
       </div>
     </section>
