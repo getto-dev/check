@@ -12,6 +12,8 @@ export class EstimateFileError extends Error {
 
 export const ESTIMATE_FORMAT_VERSION = 1 as const;
 const SCRIPT_ID = 'estimate-data';
+const APP_ID = 'smeta' as const;
+const LEGACY_APP_ID = 'santeh-schet';
 const FONT_PATH = `${process.env.NEXT_PUBLIC_BASE_PATH ?? ''}/fonts/roboto-all-400-normal.woff`;
 let cachedFontDataPromise: Promise<string> | null = null;
 
@@ -50,7 +52,7 @@ const validItem = (value: unknown): value is InvoiceItem => {
 const parse = (raw: unknown): EstimateFileV1 => {
   if (!raw || typeof raw !== 'object') throw new EstimateFileError('Неверный формат файла.');
   const data = raw as Record<string, unknown>;
-  if (data.version !== 1 || data.app !== 'santeh-schet') {
+  if (data.version !== ESTIMATE_FORMAT_VERSION || (data.app !== APP_ID && data.app !== LEGACY_APP_ID)) {
     throw new EstimateFileError(`Неподдерживаемая версия файла: ${String(data.version ?? 'неизвестно')}`);
   }
   if (!Array.isArray(data.items) || !data.items.every(validItem)) {
@@ -70,8 +72,8 @@ const parse = (raw: unknown): EstimateFileV1 => {
     discountPercent: Math.max(0, Math.min(MAX_DISCOUNT_PERCENT, legacyDiscount)),
   };
   return {
-    version: 1,
-    app: 'santeh-schet',
+    version: ESTIMATE_FORMAT_VERSION,
+    app: APP_ID,
     name: typeof data.name === 'string' && data.name ? data.name : 'Импортированная смета',
     items: data.items,
     settings,
@@ -165,8 +167,8 @@ const renderSection = (title: string, items: InvoiceItem[]) => {
 
 export const serializeEstimate = async (items: InvoiceItem[], settings: Settings, name: string) => {
   const data: EstimateFileV1 = {
-    version: 1,
-    app: 'santeh-schet',
+    version: ESTIMATE_FORMAT_VERSION,
+    app: APP_ID,
     name,
     items,
     settings,
@@ -190,7 +192,7 @@ export const serializeEstimate = async (items: InvoiceItem[], settings: Settings
 export const saveEstimateToFile = async (items: InvoiceItem[], settings: Settings, customName?: string) => {
   if (!items.length || typeof window === 'undefined') return null;
   const name = customName?.trim() || settings.address.trim() || `Смета от ${new Date().toLocaleDateString('ru-RU')}`;
-  const fileName = `Smeta_${name.replace(/[<>:"/\\|?*\x00-\x1f]/g, '').replace(/\s+/g, '_').slice(0, 60) || 'Smeta'}_${new Date().toISOString().slice(0, 10)}.html`;
+  const fileName = `Smeta_${name.replace(/[<>:\"/\\|?*\x00-\x1f]/g, '').replace(/\s+/g, '_').slice(0, 60) || 'Smeta'}_${new Date().toISOString().slice(0, 10)}.html`;
   const html = await serializeEstimate(items, settings, name);
   const url = URL.createObjectURL(new Blob([html], { type: 'text/html;charset=utf-8' }));
   const anchor = document.createElement('a');
