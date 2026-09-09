@@ -74,7 +74,11 @@ const score = (
 
 type ScoredCatalogItem = CatalogItem & { score: number };
 
-const withoutScore = ({ score: _score, ...item }: ScoredCatalogItem): CatalogItem => item;
+const withoutScore = (scored: ScoredCatalogItem): CatalogItem => {
+  const { score: itemScore, ...item } = scored;
+  void itemScore;
+  return item;
+};
 
 export const searchCatalog = (
   catalog: CatalogItem[],
