@@ -1,4 +1,4 @@
-const VERSION = '24.1.0';
+const VERSION = '24.2.0';
 const CACHE = `smeta-${VERSION}`;
 const OFFLINE = './offline.html';
 const STATIC_ASSETS = [OFFLINE, './', './fonts/roboto-all-400-normal.woff'];
@@ -26,6 +26,7 @@ self.addEventListener('install', (event) => {
     const cache = await caches.open(CACHE);
     await Promise.allSettled(assets.map((asset) => cache.add(asset)));
     await notifyClients({ type: 'SW_INSTALLING', version: VERSION });
+    // Deliberately do not call skipWaiting here. The app asks the worker to activate.
   })());
 });
 
