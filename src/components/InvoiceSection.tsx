@@ -47,7 +47,7 @@ export function InvoiceSection() {
       showToast('PDF сметы создан', 'success');
     } catch (error) {
       console.error(error);
-      showToast('Не удалось создать PDF. Проверьте соединение и повторите попытку.', 'error');
+      showToast('Не удалось создать PDF. Повторите попытку.', 'error');
     } finally {
       setExporting(false);
     }
@@ -61,7 +61,7 @@ export function InvoiceSection() {
       if (fileName) showToast('HTML сметы сохранён', 'success');
     } catch (error) {
       console.error(error);
-      showToast('Не удалось сохранить HTML. Проверьте соединение и повторите попытку.', 'error');
+      showToast('Не удалось сохранить HTML. Повторите попытку.', 'error');
     } finally {
       setSavingHtml(false);
     }
@@ -90,13 +90,7 @@ export function InvoiceSection() {
               <div className="font-bold leading-snug break-words">{item.name}</div>
               <div className="mt-1 text-xs text-muted-foreground break-words">{formatCurrency(item.priceKopecks)} / {item.unit}{item.description && <span> · {item.description}</span>}</div>
             </div>
-            <QuantityStepper
-              value={item.quantity}
-              onChange={(quantity) => updateQuantity(item.id, quantity)}
-              className="row-start-2 col-start-1 sm:row-auto sm:col-auto sm:w-48"
-              label="Количество"
-              valueLabel={item.unit}
-            />
+            <QuantityStepper value={item.quantity} onChange={(quantity) => updateQuantity(item.id, quantity)} className="row-start-2 col-start-1 sm:row-auto sm:col-auto sm:w-48" label="Количество" valueLabel={item.unit} />
             <div className="col-start-2 row-start-2 self-center text-right font-extrabold tabular-nums sm:row-auto sm:col-auto sm:w-28">{formatCurrency(Math.round(item.priceKopecks * item.quantity))}</div>
             <button type="button" className="icon-button col-start-2 row-start-1 justify-self-end w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => removeItem(item.id)} aria-label={`Удалить позицию ${index + 1}`}><Trash2 size={16} /></button>
           </div>
