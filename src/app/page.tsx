@@ -13,11 +13,13 @@ import { IOSInstallBanner } from '@/components/IOSInstallBanner';
 import { MobileNavigation } from '@/components/MobileNavigation';
 import { useAppStore } from '@/lib/store';
 import { usePWA } from '@/hooks/use-pwa';
+import { useProfessionDataset } from '@/lib/use-dataset';
 
 export default function HomePage() {
   const currentTab = useAppStore((state) => state.currentTab);
   const setTab = useAppStore((state) => state.setTab);
   const pwa = usePWA();
+  const dataset = useProfessionDataset();
 
   const content = useMemo(() => {
     switch (currentTab) {
@@ -29,13 +31,22 @@ export default function HomePage() {
         return <SettingsSection {...pwa} />;
       default:
         return <>
-          <SearchSection onManualClick={() => setTab('manual')} />
+          <SearchSection categories={dataset.categories} onManualClick={() => setTab('manual')} />
           <section className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8 mx-auto w-full max-w-5xl overflow-y-auto">
-            <CatalogList />
+            {dataset.loading && !dataset.catalogItems.length ? (
+              <div className="py-16 text-center text-muted-foreground">Загрузка каталога…</div>
+            ) : dataset.error && !dataset.catalogItems.length ? (
+              <div className="py-16 text-center text-muted-foreground">
+                <p>Не удалось загрузить каталог.</p>
+                <p className="mt-2 text-xs">Откройте приложение с интернетом один раз, чтобы сохранить каталог для работы offline.</p>
+              </div>
+            ) : (
+              <CatalogList catalogItems={dataset.catalogItems} categories={dataset.categories} />
+            )}
           </section>
         </>;
     }
-  }, [currentTab, setTab, pwa]);
+  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, pwa, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
