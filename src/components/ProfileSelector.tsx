@@ -1,6 +1,6 @@
 'use client';
 
-import { memo } from 'react';
+import { memo, useState } from 'react';
 import { BriefcaseBusiness, Check, ChevronDown, RefreshCw } from 'lucide-react';
 import type { DatasetIndexEntry } from '@/lib/dataset';
 import { cn } from '@/lib/utils';
@@ -25,10 +25,14 @@ export const ProfileSelector = memo(function ProfileSelector({
   onUpdate,
 }: ProfileSelectorProps) {
   const activeProfile = profiles.find((profile) => profile.id === activeProfileId);
+  const [actionError, setActionError] = useState<string | null>(null);
   if (!activeProfile && profiles.length === 0) return null;
 
   const handleRefresh = () => {
-    void (updateAvailable ? onUpdate() : onCheckUpdate());
+    setActionError(null);
+    void (updateAvailable ? onUpdate() : onCheckUpdate()).catch((error: unknown) => {
+      setActionError(error instanceof Error ? error.message : 'Не удалось обновить каталог');
+    });
   };
 
   return (
@@ -73,7 +77,7 @@ export const ProfileSelector = memo(function ProfileSelector({
         </button>
       </div>
       <div className="min-h-5 px-1 pt-1 text-[10px] text-muted-foreground" aria-live="polite">
-        {busy ? 'Обновление каталога…' : updateAvailable ? 'Доступна новая версия каталога' : `Версия ${activeProfile?.version ?? '—'}`}
+        {busy ? 'Обновление каталога…' : actionError ? actionError : updateAvailable ? 'Доступна новая версия каталога' : `Версия ${activeProfile?.version ?? '—'}`}
       </div>
     </div>
   );
