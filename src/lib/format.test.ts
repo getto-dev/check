@@ -5,7 +5,7 @@ import type { InvoiceItem } from './types';
 describe('formatCurrency', () => {
   test('formats kopecks as Russian rubles', () => {
     expect(formatCurrency(0)).toContain('0 ₽');
-    expect(formatCurrency(123456)).toBe('1 235 ₽');
+    expect(formatCurrency(123456)).toBe('1 235 ₽');
   });
 
   test('rounds fractional kopecks to whole displayed rubles', () => {
