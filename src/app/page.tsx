@@ -44,6 +44,10 @@ export default function HomePage() {
             profiles={dataset.profiles}
             activeProfileId={dataset.profileId}
             onSelect={handleProfileChange}
+            updateAvailable={dataset.updateAvailable}
+            busy={dataset.checkingUpdate || dataset.updating}
+            onCheckUpdate={dataset.checkForDatasetUpdate}
+            onUpdate={dataset.updateDataset}
           />
           <SearchSection categories={dataset.categories} onManualClick={() => setTab('manual')} />
           <section className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8 mx-auto w-full max-w-5xl overflow-y-auto">
@@ -60,7 +64,7 @@ export default function HomePage() {
           </section>
         </>;
     }
-  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, handleProfileChange, pwa, setTab]);
+  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, dataset.updateAvailable, dataset.checkingUpdate, dataset.updating, dataset.checkForDatasetUpdate, dataset.updateDataset, handleProfileChange, pwa, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
