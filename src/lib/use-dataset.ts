@@ -170,6 +170,7 @@ export function useProfessionDataset() {
       unit: item.unit,
       priceKopecks: item.priceKopecks,
       categoryId: item.categoryId,
+      type: item.type === 'material' ? 'product' : 'service',
     })) ?? [],
     [dataset],
   );
