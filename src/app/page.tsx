@@ -59,12 +59,12 @@ export default function HomePage() {
                 <p className="mt-2 text-xs">Для первого запуска профиля необходимо подключение к интернету.</p>
               </div>
             ) : (
-              <CatalogList catalogItems={dataset.catalogItems} categories={dataset.categories} />
+              <CatalogList catalogItems={dataset.catalogItems} categories={dataset.categories} synonyms={dataset.dataset?.synonyms} />
             )}
           </section>
         </>;
     }
-  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, dataset.updateAvailable, dataset.checkingUpdate, dataset.updating, dataset.checkForDatasetUpdate, dataset.updateDataset, handleProfileChange, pwa, setTab]);
+  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.dataset, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, dataset.updateAvailable, dataset.checkingUpdate, dataset.updating, dataset.checkForDatasetUpdate, dataset.updateDataset, handleProfileChange, pwa, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
