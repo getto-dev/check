@@ -1,13 +1,14 @@
 'use client';
 
 import { useMemo, useRef, useState } from 'react';
-import { FolderOpen, Save, Printer, Minus, Plus, Trash2, RotateCcw } from 'lucide-react';
+import { FolderOpen, Save, Printer, Trash2, RotateCcw } from 'lucide-react';
 import { useAppStore } from '@/lib/store';
 import { calculateTotals, formatCurrency, formatQuantity } from '@/lib/format';
 import { exportToPdf } from '@/lib/pdf';
 import { loadEstimateFromFile, saveEstimateToFile, EstimateFileError } from '@/lib/estimate-format';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { useToast } from '@/components/ui/toast';
+import { QuantityStepper } from '@/components/QuantityStepper';
 
 export function InvoiceSection() {
   const items = useAppStore((state) => state.items);
@@ -89,11 +90,13 @@ export function InvoiceSection() {
               <div className="font-bold leading-snug break-words">{item.name}</div>
               <div className="mt-1 text-xs text-muted-foreground break-words">{formatCurrency(item.priceKopecks)} / {item.unit}{item.description && <span> · {item.description}</span>}</div>
             </div>
-            <div className="row-start-2 col-start-1 flex items-center gap-1 sm:row-auto sm:col-auto">
-              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => changeQuantity(item.id, -1)} aria-label={`Уменьшить количество позиции ${index + 1}`}><Minus size={15} /></button>
-              <span className="min-w-9 text-center font-bold tabular-nums">{formatQuantity(item.quantity)}</span>
-              <button type="button" className="icon-button w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => changeQuantity(item.id, 1)} aria-label={`Увеличить количество позиции ${index + 1}`}><Plus size={15} /></button>
-            </div>
+            <QuantityStepper
+              value={item.quantity}
+              onChange={(quantity) => useAppStore.getState().updateQuantity(item.id, quantity)}
+              className="row-start-2 col-start-1 sm:row-auto sm:col-auto sm:w-48"
+              label="Количество"
+              valueLabel={item.unit}
+            />
             <div className="col-start-2 row-start-2 self-center text-right font-extrabold tabular-nums sm:row-auto sm:col-auto sm:w-28">{formatCurrency(Math.round(item.priceKopecks * item.quantity))}</div>
             <button type="button" className="icon-button col-start-2 row-start-1 justify-self-end w-11 h-11 sm:w-8 sm:h-8 focus-visible:ring-2 focus-visible:ring-ring" onClick={() => removeItem(item.id)} aria-label={`Удалить позицию ${index + 1}`}><Trash2 size={16} /></button>
           </div>
