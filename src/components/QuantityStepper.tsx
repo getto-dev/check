@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect, useState } from 'react';
 import { Minus, Plus } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { changeQuantity, normalizeQuantity } from '@/lib/quantity';
+import { changeQuantity, normalizeQuantity } from '@/lib/quantity-rules';
 
 interface QuantityStepperProps {
   value: number;
@@ -14,18 +15,32 @@ interface QuantityStepperProps {
 
 export function QuantityStepper({ value, onChange, className, label = 'Количество', valueLabel }: QuantityStepperProps) {
   const normalizedValue = normalizeQuantity(value);
-  const canDecrease = normalizedValue > 1;
+  const [draft, setDraft] = useState(String(normalizedValue));
 
-  const decrease = () => onChange(changeQuantity(normalizedValue, -1));
-  const increase = () => onChange(changeQuantity(normalizedValue, 1));
+  // Keep the visible field in sync when the value changes from outside the input.
+  useEffect(() => setDraft(String(normalizedValue)), [normalizedValue]);
+
+  const applyValue = (nextValue: number) => {
+    const normalized = normalizeQuantity(nextValue);
+    setDraft(String(normalized));
+    onChange(normalized);
+  };
+
+  const decrease = () => applyValue(changeQuantity(normalizedValue, -1));
+  const increase = () => applyValue(changeQuantity(normalizedValue, 1));
 
   const handleInputChange = (input: string) => {
+    setDraft(input);
     if (input.trim() === '') return;
+
     const parsed = Number(input.replace(',', '.'));
     if (Number.isFinite(parsed)) onChange(normalizeQuantity(parsed));
   };
 
-  const handleInputBlur = () => onChange(normalizeQuantity(normalizedValue));
+  const handleInputBlur = () => {
+    const parsed = Number(draft.replace(',', '.'));
+    applyValue(Number.isFinite(parsed) ? parsed : normalizedValue);
+  };
 
   return (
     <div className={cn('space-y-2', className)}>
@@ -34,18 +49,16 @@ export function QuantityStepper({ value, onChange, className, label = 'Коли�
         <button
           type="button"
           onClick={decrease}
-          disabled={!canDecrease}
+          disabled={normalizedValue <= 1}
           className="flex h-full w-12 shrink-0 items-center justify-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
           aria-label="Уменьшить количество"
         >
           <Minus className="h-4 w-4" />
         </button>
         <input
-          type="number"
-          min={1}
-          step={0.5}
+          type="text"
           inputMode="decimal"
-          value={normalizedValue}
+          value={draft}
           onChange={(event) => handleInputChange(event.target.value)}
           onBlur={handleInputBlur}
           className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold tabular-nums outline-none"
