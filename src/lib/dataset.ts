@@ -26,6 +26,7 @@ export interface ProfessionDataset {
   version: string;
   locale: string;
   currency: string;
+  itemCount?: number;
   categories: DatasetCategory[];
   items: DatasetItem[];
   synonyms?: unknown;
@@ -37,6 +38,7 @@ export interface DatasetIndexEntry {
   name: string;
   version: string;
   manifest: string;
+  itemCount?: number;
 }
 
 export interface DatasetIndex {
