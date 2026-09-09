@@ -1,8 +1,9 @@
 'use client';
 
-import { useMemo } from 'react';
+import { useCallback, useMemo } from 'react';
 import { Header } from '@/components/Header';
 import { SearchSection } from '@/components/SearchSection';
+import { ProfileSelector } from '@/components/ProfileSelector';
 import { CatalogList } from '@/components/CatalogList';
 import { InvoiceSection } from '@/components/InvoiceSection';
 import { ManualSection } from '@/components/ManualSection';
@@ -18,8 +19,16 @@ import { useProfessionDataset } from '@/lib/use-dataset';
 export default function HomePage() {
   const currentTab = useAppStore((state) => state.currentTab);
   const setTab = useAppStore((state) => state.setTab);
+  const setCategory = useAppStore((state) => state.setCategory);
+  const setSearchQuery = useAppStore((state) => state.setSearchQuery);
   const pwa = usePWA();
   const dataset = useProfessionDataset();
+
+  const handleProfileChange = useCallback((profileId: string) => {
+    setCategory(null);
+    setSearchQuery('');
+    dataset.selectProfile(profileId);
+  }, [dataset.selectProfile, setCategory, setSearchQuery]);
 
   const content = useMemo(() => {
     switch (currentTab) {
@@ -31,6 +40,11 @@ export default function HomePage() {
         return <SettingsSection {...pwa} />;
       default:
         return <>
+          <ProfileSelector
+            profiles={dataset.profiles}
+            activeProfileId={dataset.profileId}
+            onSelect={handleProfileChange}
+          />
           <SearchSection categories={dataset.categories} onManualClick={() => setTab('manual')} />
           <section className="flex-1 px-3 sm:px-4 pb-6 sm:pb-8 mx-auto w-full max-w-5xl overflow-y-auto">
             {dataset.loading && !dataset.catalogItems.length ? (
@@ -38,7 +52,7 @@ export default function HomePage() {
             ) : dataset.error && !dataset.catalogItems.length ? (
               <div className="py-16 text-center text-muted-foreground">
                 <p>Не удалось загрузить каталог.</p>
-                <p className="mt-2 text-xs">Откройте приложение с интернетом один раз, чтобы сохранить каталог для работы offline.</p>
+                <p className="mt-2 text-xs">Для первого запуска профиля необходимо подключение к интернету.</p>
               </div>
             ) : (
               <CatalogList catalogItems={dataset.catalogItems} categories={dataset.categories} />
@@ -46,7 +60,7 @@ export default function HomePage() {
           </section>
         </>;
     }
-  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, pwa, setTab]);
+  }, [currentTab, dataset.catalogItems, dataset.categories, dataset.error, dataset.loading, dataset.profileId, dataset.profiles, handleProfileChange, pwa, setTab]);
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
