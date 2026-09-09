@@ -17,10 +17,10 @@ describe('catalog integrity', () => {
     expect(new Set(ids).size).toBe(ids.length);
   });
 
-  test('has valid prices, names, descriptions and units', () => {
-    expect(allItems.every((item) => item.name.trim().length > 0)).toBe(true);
-    expect(allItems.every((item) => item.description.trim().length > 0)).toBe(true);
-    expect(allItems.every((item) => item.unit.trim().length > 0)).toBe(true);
+  test('has valid raw catalog fields', () => {
+    expect(allItems.every((item) => typeof item.n === 'string' && item.n.trim().length > 0)).toBe(true);
+    expect(allItems.every((item) => typeof item.d === 'string' && item.d.trim().length > 0)).toBe(true);
+    expect(allItems.every((item) => typeof item.u === 'string' && item.u.trim().length > 0)).toBe(true);
     expect(allItems.every((item) => Number.isFinite(item.p) && item.p >= 0)).toBe(true);
   });
 
