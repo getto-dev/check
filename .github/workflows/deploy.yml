@@ -44,8 +44,19 @@ jobs:
           retention-days: 1
           include-hidden-files: true
 
+  e2e:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: ${{ env.BUN_VERSION }}
+      - run: bun install
+      - run: bunx playwright install --with-deps chromium
+      - run: bun run e2e
+
   deploy:
-    needs: build
+    needs: [build, e2e]
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
