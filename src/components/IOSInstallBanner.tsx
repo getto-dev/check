@@ -54,8 +54,8 @@ export const IOSInstallBanner = memo(function IOSInstallBanner({ isStandalone, i
             <Home className="w-6 h-6 text-white" aria-hidden="true" />
           </div>
           <div className="flex-1 min-w-0">
-            <h3 className="font-bold text-sm text-card-foreground">Добавить на экран «Домой»</h3>
-            <p className="text-xs text-muted-foreground mt-0.5">Работайте быстрее и открывайте СантехСчёт как приложение.</p>
+            <h3 className="font-bold text-sm text-card-foreground">Добавить Smeta на экран «Домой»</h3>
+            <p className="text-xs text-muted-foreground mt-0.5">Работайте быстрее и открывайте Smeta как приложение.</p>
           </div>
           <button type="button" onClick={handleDismiss} className="w-8 h-8 shrink-0 flex items-center justify-center rounded-lg bg-muted/50 hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Закрыть">
             <X className="w-4 h-4 text-muted-foreground" aria-hidden="true" />
