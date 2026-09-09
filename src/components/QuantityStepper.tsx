@@ -17,7 +17,6 @@ export function QuantityStepper({ value, onChange, className, label = 'Коли�
   const normalizedValue = normalizeQuantity(value);
   const [draft, setDraft] = useState(String(normalizedValue));
 
-  // Keep the visible field in sync when the value changes from outside the input.
   useEffect(() => setDraft(String(normalizedValue)), [normalizedValue]);
 
   const applyValue = (nextValue: number) => {
@@ -29,13 +28,7 @@ export function QuantityStepper({ value, onChange, className, label = 'Коли�
   const decrease = () => applyValue(changeQuantity(normalizedValue, -1));
   const increase = () => applyValue(changeQuantity(normalizedValue, 1));
 
-  const handleInputChange = (input: string) => {
-    setDraft(input);
-    if (input.trim() === '') return;
-
-    const parsed = Number(input.replace(',', '.'));
-    if (Number.isFinite(parsed)) onChange(normalizeQuantity(parsed));
-  };
+  const handleInputChange = (input: string) => setDraft(input);
 
   const handleInputBlur = () => {
     const parsed = Number(draft.replace(',', '.'));
