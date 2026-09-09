@@ -1,0 +1,66 @@
+'use client';
+
+import { Minus, Plus } from 'lucide-react';
+import { cn } from '@/lib/utils';
+import { changeQuantity, normalizeQuantity } from '@/lib/quantity';
+
+interface QuantityStepperProps {
+  value: number;
+  onChange: (value: number) => void;
+  className?: string;
+  label?: string;
+  valueLabel?: string;
+}
+
+export function QuantityStepper({ value, onChange, className, label = 'Количество', valueLabel }: QuantityStepperProps) {
+  const normalizedValue = normalizeQuantity(value);
+  const canDecrease = normalizedValue > 1;
+
+  const decrease = () => onChange(changeQuantity(normalizedValue, -1));
+  const increase = () => onChange(changeQuantity(normalizedValue, 1));
+
+  const handleInputChange = (input: string) => {
+    if (input.trim() === '') return;
+    const parsed = Number(input.replace(',', '.'));
+    if (Number.isFinite(parsed)) onChange(normalizeQuantity(parsed));
+  };
+
+  const handleInputBlur = () => onChange(normalizeQuantity(normalizedValue));
+
+  return (
+    <div className={cn('space-y-2', className)}>
+      {label && <span className="text-sm font-bold block">{label}</span>}
+      <div className="flex h-12 items-center overflow-hidden rounded-xl border border-border bg-card focus-within:border-primary">
+        <button
+          type="button"
+          onClick={decrease}
+          disabled={!canDecrease}
+          className="flex h-full w-12 shrink-0 items-center justify-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring disabled:cursor-not-allowed disabled:opacity-40"
+          aria-label="Уменьшить количество"
+        >
+          <Minus className="h-4 w-4" />
+        </button>
+        <input
+          type="number"
+          min={1}
+          step={0.5}
+          inputMode="decimal"
+          value={normalizedValue}
+          onChange={(event) => handleInputChange(event.target.value)}
+          onBlur={handleInputBlur}
+          className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold tabular-nums outline-none"
+          aria-label={label}
+        />
+        <button
+          type="button"
+          onClick={increase}
+          className="flex h-full w-12 shrink-0 items-center justify-center transition-colors hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          aria-label="Увеличить количество"
+        >
+          <Plus className="h-4 w-4" />
+        </button>
+      </div>
+      {valueLabel && <p className="text-xs text-muted-foreground">{valueLabel}</p>}
+    </div>
+  );
+}
