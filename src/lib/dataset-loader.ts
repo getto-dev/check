@@ -1,4 +1,4 @@
-import type { DatasetIndex, ProfessionDataset } from './dataset';
+import type { DatasetIndex, DatasetSynonyms, ProfessionDataset } from './dataset';
 
 export const DATASET_INDEX_URL =
   'https://raw.githubusercontent.com/getto-dev/check-data/main/index.json';
@@ -34,6 +34,27 @@ export async function fetchDatasetManifest(manifestPath: string) {
       config?: string;
     };
   }>(new URL(manifestPath, DATASET_BASE_URL).toString());
+}
+
+function validateSynonyms(value: unknown): DatasetSynonyms | undefined {
+  if (value === undefined) return undefined;
+  if (!value || typeof value !== 'object') throw new Error('Invalid synonyms structure');
+
+  const synonyms = value as { schemaVersion?: unknown; groups?: unknown };
+  if (synonyms.schemaVersion !== 1 || !Array.isArray(synonyms.groups)) {
+    throw new Error('Unsupported or invalid synonyms schema');
+  }
+
+  for (const group of synonyms.groups) {
+    if (!Array.isArray(group) || group.length < 2 || group.some((term) => typeof term !== 'string' || !term.trim())) {
+      throw new Error('Invalid synonyms group');
+    }
+  }
+
+  return {
+    schemaVersion: 1,
+    groups: synonyms.groups as string[][],
+  };
 }
 
 function validateDataset(dataset: ProfessionDataset) {
@@ -107,7 +128,7 @@ export async function fetchProfessionDataset(
     itemCount: manifest.itemCount,
     categories: categories.categories,
     items: catalog.items,
-    synonyms,
+    synonyms: validateSynonyms(synonyms),
     config,
   });
 }
