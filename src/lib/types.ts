@@ -9,6 +9,7 @@ export interface CatalogItem {
   unit: string;
   priceKopecks: number;
   categoryId: string;
+  type?: ItemType;
 }
 
 export interface InvoiceItem {
