@@ -1,5 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { calculateTotals } from './format';
+import { normalizeQuantity } from './quantity-rules';
 import { useAppStore } from './store';
 import type { InvoiceItem } from './types';
 
@@ -36,54 +37,36 @@ describe('quantity controls', () => {
     categoryId: 'service',
   });
 
-  test('keeps piece-counted items whole', () => {
-    useAppStore.setState({ items: [item(1)] });
-
+  test('uses the same half-unit steps for services and products regardless of unit', () => {
+    useAppStore.setState({ items: [item(1, 'шт')] });
     useAppStore.getState().changeQuantity('quantity-test', -1);
     expect(useAppStore.getState().items[0].quantity).toBe(1);
-
+    useAppStore.getState().changeQuantity('quantity-test', 1);
+    expect(useAppStore.getState().items[0].quantity).toBe(1.5);
     useAppStore.getState().changeQuantity('quantity-test', 1);
     expect(useAppStore.getState().items[0].quantity).toBe(2);
-
-    useAppStore.getState().changeQuantity('quantity-test', -1);
-    expect(useAppStore.getState().items[0].quantity).toBe(1);
-
-    useAppStore.setState({ items: [] });
-  });
-
-  test('changes measurable quantities by 0.1 in both directions', () => {
-    useAppStore.setState({ items: [item(1, 'м²')] });
-
-    useAppStore.getState().changeQuantity('quantity-test', -1);
-    expect(useAppStore.getState().items[0].quantity).toBe(0.9);
-
-    useAppStore.getState().changeQuantity('quantity-test', 1);
-    expect(useAppStore.getState().items[0].quantity).toBe(1);
 
     useAppStore.setState({ items: [item(2, 'м²')] });
     useAppStore.getState().changeQuantity('quantity-test', -1);
-    expect(useAppStore.getState().items[0].quantity).toBe(1.9);
+    expect(useAppStore.getState().items[0].quantity).toBe(1.5);
     useAppStore.getState().changeQuantity('quantity-test', 1);
     expect(useAppStore.getState().items[0].quantity).toBe(2);
-
-    useAppStore.setState({ items: [item(0.5, 'м²')] });
-    useAppStore.getState().changeQuantity('quantity-test', -1);
-    expect(useAppStore.getState().items[0].quantity).toBe(0.4);
-    useAppStore.getState().changeQuantity('quantity-test', 1);
-    expect(useAppStore.getState().items[0].quantity).toBe(0.5);
 
     useAppStore.setState({ items: [] });
   });
 
-  test('normalizes direct quantity updates according to the unit', () => {
+  test('normalizes direct quantity updates to the 0.5 grid and minimum 1', () => {
     useAppStore.setState({ items: [item(2)] });
-    useAppStore.getState().updateQuantity('quantity-test', 1.7);
-    expect(useAppStore.getState().items[0].quantity).toBe(2);
+    useAppStore.getState().updateQuantity('quantity-test', 2.3);
+    expect(useAppStore.getState().items[0].quantity).toBe(2.5);
+    useAppStore.getState().updateQuantity('quantity-test', 1.2);
+    expect(useAppStore.getState().items[0].quantity).toBe(1);
+    useAppStore.getState().updateQuantity('quantity-test', -10);
+    expect(useAppStore.getState().items[0].quantity).toBe(1);
+    useAppStore.getState().updateQuantity('quantity-test', Number.NaN);
+    expect(useAppStore.getState().items[0].quantity).toBe(1);
 
-    useAppStore.setState({ items: [item(2, 'м²')] });
-    useAppStore.getState().updateQuantity('quantity-test', 1.234);
-    expect(useAppStore.getState().items[0].quantity).toBe(1.23);
-
+    expect(normalizeQuantity(3.5)).toBe(3.5);
     useAppStore.setState({ items: [] });
   });
 });
@@ -98,9 +81,11 @@ describe('catalog item insertion', () => {
     categoryId: 'heating',
   };
 
-  test('normalizes fractional piece quantity on insert', () => {
+  test('normalizes quantity to the universal minimum', () => {
     useAppStore.getState().addItem(catalogItem, 0.9);
     expect(useAppStore.getState().items.at(-1)?.quantity).toBe(1);
+    useAppStore.getState().addItem(catalogItem, 1.5);
+    expect(useAppStore.getState().items.at(-1)?.quantity).toBe(2.5);
     useAppStore.setState({ items: [] });
   });
 
