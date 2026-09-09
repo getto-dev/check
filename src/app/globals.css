@@ -33,7 +33,6 @@
   --color-secondary-foreground: #d8edf9;
   --color-accent: #1d2a34;
   --color-accent-foreground: #f1f3f5;
-  --color-destructive: #f87171;
   --color-ring: #2388c9;
   color-scheme: dark;
 }
@@ -45,6 +44,10 @@ button, input, select { font: inherit; }
 button { cursor: pointer; -webkit-tap-highlight-color: transparent; touch-action: manipulation; }
 input, select { min-width: 0; }
 input[type="search"] { -webkit-appearance: none; appearance: none; }
+input[type="search"]::-webkit-search-cancel-button,
+input[type="search"]::-webkit-search-decoration,
+input[type="search"]::-webkit-search-results-button,
+input[type="search"]::-webkit-search-results-decoration { display: none; -webkit-appearance: none; }
 input[type="number"] { -moz-appearance: textfield; }
 input[type="number"]::-webkit-outer-spin-button, input[type="number"]::-webkit-inner-spin-button { margin: 0; }
 .gradient-bg { background: linear-gradient(135deg, #1677b3 0%, #2388c9 100%); }
