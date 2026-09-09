@@ -13,6 +13,11 @@ export interface DatasetItem {
   type?: 'service' | 'material';
 }
 
+export interface DatasetSynonyms {
+  schemaVersion: number;
+  groups: string[][];
+}
+
 export interface DatasetConfig {
   defaultUnit?: string;
   supportedUnits?: string[];
@@ -29,7 +34,7 @@ export interface ProfessionDataset {
   itemCount?: number;
   categories: DatasetCategory[];
   items: DatasetItem[];
-  synonyms?: unknown;
+  synonyms?: DatasetSynonyms;
   config?: DatasetConfig;
 }
 
