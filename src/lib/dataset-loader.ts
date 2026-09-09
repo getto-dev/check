@@ -26,6 +26,7 @@ export async function fetchDatasetManifest(manifestPath: string) {
     version: string;
     locale: string;
     currency: string;
+    itemCount?: number;
     files: {
       catalog: string;
       categories: string;
@@ -33,6 +34,44 @@ export async function fetchDatasetManifest(manifestPath: string) {
       config?: string;
     };
   }>(new URL(manifestPath, DATASET_BASE_URL).toString());
+}
+
+function validateDataset(dataset: ProfessionDataset) {
+  if (dataset.schemaVersion !== 1) throw new Error('Unsupported dataset schema version');
+  if (!dataset.id || !dataset.name || !dataset.version || !dataset.locale || !dataset.currency) {
+    throw new Error('Invalid dataset metadata');
+  }
+  if (!Array.isArray(dataset.categories) || !Array.isArray(dataset.items)) {
+    throw new Error('Invalid dataset structure');
+  }
+  if (dataset.itemCount !== undefined && dataset.itemCount !== dataset.items.length) {
+    throw new Error(`Dataset item count mismatch: ${dataset.items.length}/${dataset.itemCount}`);
+  }
+
+  const categoryIds = new Set<string>();
+  for (const category of dataset.categories) {
+    if (!category.id || !category.name || categoryIds.has(category.id)) {
+      throw new Error(`Invalid or duplicate category: ${category.id}`);
+    }
+    categoryIds.add(category.id);
+  }
+
+  const itemIds = new Set<string>();
+  for (const item of dataset.items) {
+    if (!item.id || itemIds.has(item.id)) throw new Error(`Invalid or duplicate item id: ${item.id}`);
+    if (!item.name || !item.unit || !Number.isInteger(item.priceKopecks) || item.priceKopecks < 0) {
+      throw new Error(`Invalid catalog item: ${item.id}`);
+    }
+    if (!categoryIds.has(item.categoryId)) {
+      throw new Error(`Unknown category ${item.categoryId} for ${item.id}`);
+    }
+    if (item.type !== undefined && item.type !== 'service' && item.type !== 'material') {
+      throw new Error(`Invalid item type for ${item.id}`);
+    }
+    itemIds.add(item.id);
+  }
+
+  return dataset;
 }
 
 export async function fetchProfessionDataset(
@@ -43,10 +82,10 @@ export async function fetchProfessionDataset(
   baseUrl.pathname = baseUrl.pathname.replace(/[^/]+$/, '');
 
   const [catalog, categories, synonyms, config] = await Promise.all([
-    fetchJson<{ items: ProfessionDataset['items'] }>(
+    fetchJson<{ schemaVersion: number; items: ProfessionDataset['items'] }>(
       new URL(manifest.files.catalog, baseUrl).toString(),
     ),
-    fetchJson<{ categories: ProfessionDataset['categories'] }>(
+    fetchJson<{ schemaVersion: number; categories: ProfessionDataset['categories'] }>(
       new URL(manifest.files.categories, baseUrl).toString(),
     ),
     manifest.files.synonyms
@@ -59,11 +98,16 @@ export async function fetchProfessionDataset(
       : Promise.resolve(undefined),
   ]);
 
-  return {
+  if (catalog.schemaVersion !== 1 || categories.schemaVersion !== 1) {
+    throw new Error('Unsupported dataset file schema version');
+  }
+
+  return validateDataset({
     ...manifest,
+    itemCount: manifest.itemCount,
     categories: categories.categories,
     items: catalog.items,
     synonyms,
     config,
-  };
+  });
 }
