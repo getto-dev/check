@@ -1,6 +1,7 @@
 'use client';
 
 import type { ProfessionDataset } from './dataset';
+import { validateDataset } from './dataset-loader';
 
 const DB_NAME = 'check-datasets';
 const DB_VERSION = 1;
@@ -50,7 +51,13 @@ const withStore = async <T>(
 export async function readCachedDataset(profileId: string): Promise<ProfessionDataset | null> {
   try {
     const record = await withStore<CachedDatasetRecord | undefined>('readonly', (store) => store.get(profileId));
-    if (record?.dataset) return record.dataset;
+    if (record?.dataset) {
+      try {
+        return validateDataset(record.dataset);
+      } catch {
+        // Discard invalid cached data and fall back to the legacy cache/network path.
+      }
+    }
   } catch {
     // Fall back to the pre-IndexedDB cache so existing installations keep working.
   }
@@ -59,9 +66,8 @@ export async function readCachedDataset(profileId: string): Promise<ProfessionDa
   try {
     const legacy = window.localStorage.getItem(`${LEGACY_PREFIX}${profileId}`);
     if (!legacy) return null;
-    const dataset = JSON.parse(legacy) as ProfessionDataset;
-    if (!dataset || dataset.schemaVersion !== 1 || dataset.id !== profileId) return null;
-    if (!Array.isArray(dataset.items) || !Array.isArray(dataset.categories)) return null;
+    const dataset = validateDataset(JSON.parse(legacy) as ProfessionDataset);
+    if (dataset.id !== profileId) return null;
 
     try {
       await writeCachedDataset(dataset);
@@ -76,16 +82,17 @@ export async function readCachedDataset(profileId: string): Promise<ProfessionDa
 }
 
 export async function writeCachedDataset(dataset: ProfessionDataset): Promise<void> {
+  const validated = validateDataset(dataset);
   try {
     await withStore<IDBValidKey>('readwrite', (store) => store.put({
-      key: dataset.id,
-      dataset,
+      key: validated.id,
+      dataset: validated,
       cachedAt: Date.now(),
     } satisfies CachedDatasetRecord));
   } catch {
     if (typeof window === 'undefined') return;
     try {
-      window.localStorage.setItem(`${LEGACY_PREFIX}${dataset.id}`, JSON.stringify(dataset));
+      window.localStorage.setItem(`${LEGACY_PREFIX}${validated.id}`, JSON.stringify(validated));
     } catch {
       // Caching is an optimization; the live dataset remains usable without it.
     }
