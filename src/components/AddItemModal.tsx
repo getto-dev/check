@@ -1,12 +1,12 @@
 'use client';
 
 import { useState } from 'react';
-import { Minus, Plus } from 'lucide-react';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from './ui/dialog';
 import { Button } from './ui/button';
 import { useAppStore } from '@/lib/store';
-import { changeQuantity, isDiscreteUnit, normalizeQuantity, quantityStep } from '@/lib/quantity';
+import { normalizeQuantity } from '@/lib/quantity-rules';
 import { formatCurrency } from '@/lib/format';
+import { QuantityStepper } from './QuantityStepper';
 import type { CatalogItem } from '@/lib/types';
 
 function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void }) {
@@ -15,21 +15,9 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
   const [priceRubles, setPriceRubles] = useState((item.priceKopecks / 100).toFixed(2));
   const priceKopecks = Math.max(0, Math.round((Number(priceRubles.replace(',', '.')) || 0) * 100));
   const totalKopecks = Math.round(priceKopecks * quantity);
-  const discrete = isDiscreteUnit(item.unit);
-  const step = quantityStep(quantity, item.unit, 1);
-
-  const updateQuantity = (direction: -1 | 1) => {
-    setQuantity((current) => changeQuantity(current, item.unit, direction));
-  };
-
-  const handleQuantityChange = (value: string) => {
-    const parsed = Number(value.replace(',', '.'));
-    if (!Number.isFinite(parsed)) return;
-    setQuantity(normalizeQuantity(parsed, item.unit));
-  };
 
   const submit = () => {
-    addItem(item, quantity, priceKopecks);
+    addItem(item, normalizeQuantity(quantity), priceKopecks);
     onClose();
   };
 
@@ -44,14 +32,11 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block space-y-2">
-          <span className="text-sm font-bold">Количество</span>
-          <div className="flex h-12 items-center rounded-xl border border-border bg-card overflow-hidden focus-within:border-primary">
-            <button type="button" onClick={() => updateQuantity(-1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Уменьшить количество"><Minus className="h-4 w-4" /></button>
-            <input type="number" min={discrete ? 1 : 0.1} step={step} inputMode={discrete ? 'numeric' : 'decimal'} value={quantity} onChange={(event) => handleQuantityChange(event.target.value)} className="min-w-0 flex-1 h-full bg-transparent px-1 text-center text-base font-bold outline-none" aria-label="Количество" />
-            <button type="button" onClick={() => updateQuantity(1)} className="h-full w-12 shrink-0 flex items-center justify-center hover:bg-muted focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring" aria-label="Увеличить количество"><Plus className="h-4 w-4" /></button>
-          </div>
-        </label>
+        <QuantityStepper
+          value={quantity}
+          onChange={setQuantity}
+          valueLabel={`шаг 0,5 · минимум 1 ${item.unit}`}
+        />
 
         <label className="block space-y-2">
           <span className="text-sm font-bold">Цена, ₽</span>
@@ -66,7 +51,7 @@ function AddItemForm({ item, onClose }: { item: CatalogItem; onClose: () => void
           <p className="text-xs font-semibold text-muted-foreground">Итого</p>
           <p className="text-2xl font-extrabold tabular-nums text-primary">{formatCurrency(totalKopecks)}</p>
         </div>
-        <span className="text-sm text-muted-foreground text-right">{quantity} {item.unit}</span>
+        <span className="text-sm text-muted-foreground text-right">{formatQuantity(quantity)} {item.unit}</span>
       </div>
 
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-1">
