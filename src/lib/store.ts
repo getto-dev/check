@@ -5,7 +5,7 @@ import { createJSONStorage, persist } from 'zustand/middleware';
 import type { CatalogItem, InvoiceItem, Settings, ThemeMode, TabType } from './types';
 import { calculateTotals } from './format';
 import { MAX_DISCOUNT_PERCENT } from './constants';
-import { changeQuantity, normalizeQuantity } from './quantity';
+import { changeQuantity, normalizeQuantity } from './quantity-rules';
 
 interface State {
   items: InvoiceItem[];
@@ -80,7 +80,7 @@ export const useAppStore = create<State>()(
       hydrated: false,
 
       addItem: (item, qty = 1, priceKopecks = item.priceKopecks) => set((state) => {
-        const quantity = normalizeQuantity(qty, item.unit);
+        const quantity = normalizeQuantity(qty);
         const safePriceKopecks = Number.isInteger(priceKopecks) && priceKopecks >= 0 ? priceKopecks : 0;
         const existing = state.items.find(
           (entry) => entry.catalogId === item.id
@@ -88,7 +88,7 @@ export const useAppStore = create<State>()(
             && entry.type === 'service',
         );
         if (existing) {
-          return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity, entry.unit) } : entry) };
+          return { items: state.items.map((entry) => entry.id === existing.id ? { ...entry, quantity: normalizeQuantity(entry.quantity + quantity) } : entry) };
         }
         return {
           items: [...state.items, {
@@ -107,14 +107,14 @@ export const useAppStore = create<State>()(
 
       addCatalogItem: (item, qty = 1) => get().addItem(item, qty),
       addManualItem: (item) => set((state) => ({
-        items: [...state.items, { ...item, quantity: normalizeQuantity(item.quantity, item.unit), id: crypto.randomUUID() }],
+        items: [...state.items, { ...item, quantity: normalizeQuantity(item.quantity), id: crypto.randomUUID() }],
       })),
       updateQuantity: (id, quantity) => set((state) => ({
-        items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity, item.unit) } : item),
+        items: state.items.map((item) => item.id === id ? { ...item, quantity: normalizeQuantity(quantity) } : item),
       })),
       changeQuantity: (id, direction) => set((state) => ({
         items: state.items.map((item) => item.id === id
-          ? { ...item, quantity: changeQuantity(item.quantity, item.unit, direction) }
+          ? { ...item, quantity: changeQuantity(item.quantity, direction) }
           : item),
       })),
       removeItem: (id) => set((state) => ({ items: state.items.filter((item) => item.id !== id) })),
@@ -131,7 +131,7 @@ export const useAppStore = create<State>()(
       setHydrated: (value) => set({ hydrated: value }),
       calculateTotals: () => calculateTotals(get().items, get().settings.discountPercent),
       loadEstimateData: (items, settings) => set({
-        items: items.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) })),
+        items: items.map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity) })),
         settings: normalizeSettings(settings),
       }),
     }),
@@ -142,7 +142,7 @@ export const useAppStore = create<State>()(
       merge: (persistedState, currentState) => {
         const persisted = persistedState as Partial<State> | undefined;
         const persistedItems = Array.isArray(persisted?.items)
-          ? persisted.items.filter(isInvoiceItem).map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity, item.unit) }))
+          ? persisted.items.filter(isInvoiceItem).map((item) => ({ ...item, quantity: normalizeQuantity(item.quantity) }))
           : currentState.items;
         return {
           ...currentState,
