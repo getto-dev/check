@@ -9,6 +9,7 @@ interface BeforeInstallPromptEvent extends Event {
 }
 
 type WorkerCleanup = () => void;
+const UPDATE_CHECK_TIMEOUT_MS = 15_000;
 
 export function usePWA() {
   const [installPrompt, setInstallPrompt] = useState<BeforeInstallPromptEvent | null>(null);
@@ -135,6 +136,8 @@ export function usePWA() {
         resolve(worker);
       };
 
+      const timeout = window.setTimeout(() => finish(null), UPDATE_CHECK_TIMEOUT_MS);
+
       const onStateChange = () => {
         const worker = registration.waiting ?? registration.installing;
         if (registration.waiting) {
@@ -148,11 +151,19 @@ export function usePWA() {
         const worker = registration.installing;
         if (!worker) return;
         worker.addEventListener('statechange', onStateChange);
-        cleanup = () => worker.removeEventListener('statechange', onStateChange);
+        cleanup = () => {
+          window.clearTimeout(timeout);
+          worker.removeEventListener('statechange', onStateChange);
+          registration.removeEventListener('updatefound', onUpdateFound);
+        };
       };
 
-      registration.addEventListener('updatefound', onUpdateFound, { once: true });
-      cleanup = () => registration.removeEventListener('updatefound', onUpdateFound);
+      cleanup = () => {
+        window.clearTimeout(timeout);
+        registration.removeEventListener('updatefound', onUpdateFound);
+      };
+      registration.addEventListener('updatefound', onUpdateFound);
+
       void registration.update()
         .then(() => {
           if (registration.waiting) finish(registration.waiting);
