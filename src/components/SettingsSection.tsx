@@ -7,17 +7,25 @@ import { APP_VERSION, MAX_DISCOUNT_PERCENT } from '@/lib/constants';
 import { cn } from '@/lib/utils';
 import { Sun, Moon, Monitor, Download, RefreshCw, MessageCircle } from 'lucide-react';
 import { useTheme } from 'next-themes';
-import { usePWA } from '@/hooks/use-pwa';
 import { Button } from '@/components/ui/button';
 import { useToast } from '@/components/ui/toast';
 
-export const SettingsSection = memo(function SettingsSection() {
+interface PwaControls {
+  isInstalled: boolean;
+  canInstall: boolean;
+  needsUpdate: boolean;
+  install: () => Promise<boolean>;
+  checkForUpdates: () => Promise<boolean>;
+  applyUpdate: () => void;
+}
+
+export const SettingsSection = memo(function SettingsSection(pwa: PwaControls) {
   const settings = useAppStore((state) => state.settings);
   const updateSettings = useAppStore((state) => state.updateSettings);
   const themeMode = useAppStore((state) => state.themeMode);
   const setThemeMode = useAppStore((state) => state.setThemeMode);
   const { setTheme } = useTheme();
-  const { isInstalled, canInstall, needsUpdate, install, checkForUpdates, applyUpdate } = usePWA();
+  const { isInstalled, canInstall, needsUpdate, install, checkForUpdates, applyUpdate } = pwa;
   const { showToast } = useToast();
   const [isChecking, setIsChecking] = useState(false);
 
