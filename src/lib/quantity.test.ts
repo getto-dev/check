@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 
-import { isDiscreteUnit, normalizeQuantity, quantityStep } from './quantity';
+import { changeQuantity, isDiscreteUnit, normalizeQuantity, quantityStep } from './quantity';
 
 describe('quantity rules', () => {
   test('recognizes only шт as a discrete unit', () => {
@@ -25,11 +25,25 @@ describe('quantity rules', () => {
     expect(normalizeQuantity(Number.NaN, 'м²')).toBe(0.1);
   });
 
-  test('uses unit-aware steps', () => {
+  test('uses fixed unit-aware steps', () => {
     expect(quantityStep(1, 'шт', -1)).toBe(1);
-    expect(quantityStep(1, 'шт', 1)).toBe(1);
+    expect(quantityStep(20, 'шт', 1)).toBe(1);
     expect(quantityStep(1, 'м²', -1)).toBe(0.1);
-    expect(quantityStep(1, 'м²', 1)).toBe(1);
-    expect(quantityStep(0.5, 'м²', -1)).toBe(0.1);
+    expect(quantityStep(2, 'м²', 1)).toBe(0.1);
+  });
+
+  test('changes piece-counted quantities only by whole units', () => {
+    expect(changeQuantity(1, 'шт', -1)).toBe(1);
+    expect(changeQuantity(1, 'шт', 1)).toBe(2);
+    expect(changeQuantity(2, 'шт', -1)).toBe(1);
+    expect(changeQuantity(0.9, 'шт', 1)).toBe(2);
+  });
+
+  test('changes measurable quantities by tenths in both directions', () => {
+    expect(changeQuantity(1, 'м²', -1)).toBe(0.9);
+    expect(changeQuantity(0.5, 'м²', -1)).toBe(0.4);
+    expect(changeQuantity(1.1, 'м²', -1)).toBe(1);
+    expect(changeQuantity(2, 'м²', -1)).toBe(1.9);
+    expect(changeQuantity(0.9, 'м²', 1)).toBe(1);
   });
 });
