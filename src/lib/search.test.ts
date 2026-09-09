@@ -18,6 +18,13 @@ const SYNONYMS = {
   ],
 };
 
+const CATEGORIES = [
+  { id: 'heating', name: 'Отопление' },
+  { id: 'sewerage', name: 'Канализация' },
+  { id: 'plumbing', name: 'Сантехника' },
+  { id: 'electrical', name: 'Электрика' },
+];
+
 describe('search', () => {
   test('normalizes Russian query words', () => {
     expect(stem('радиатора')).toBe('радиатор');
@@ -52,5 +59,32 @@ describe('search', () => {
     const result = searchCatalog(CATALOG_ITEMS, 'монтаж розетки', undefined, SYNONYMS);
     expect(result).toHaveLength(1);
     expect(result[0]?.id).toBe('electric_001');
+  });
+
+  test('supports multi-word synonym phrases', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'розеточный блок', undefined, SYNONYMS);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe('electric_001');
+  });
+
+  test('finds common one-character typos', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'смеситль');
+    expect(result[0]?.id).toBe('plumb_001');
+  });
+
+  test('supports partial matches', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'смес');
+    expect(result[0]?.id).toBe('plumb_001');
+  });
+
+  test('searches category names', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'электрик', undefined, undefined, CATEGORIES);
+    expect(result).toHaveLength(1);
+    expect(result[0]?.id).toBe('electric_001');
+  });
+
+  test('ranks exact name matches before description matches', () => {
+    const result = searchCatalog(CATALOG_ITEMS, 'радиатор');
+    expect(result[0]?.id).toBe('heat_001');
   });
 });
