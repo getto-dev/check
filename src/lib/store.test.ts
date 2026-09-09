@@ -96,6 +96,18 @@ describe('catalog item insertion', () => {
     expect(useAppStore.getState().items[0].quantity).toBe(3);
     useAppStore.setState({ items: [] });
   });
+
+  test('keeps product type and merges repeated product items', () => {
+    const material = { ...catalogItem, id: 'pipe-1', name: 'Труба', type: 'product' as const };
+    useAppStore.getState().addItem(material, 2);
+    useAppStore.getState().addItem(material, 1);
+    expect(useAppStore.getState().items).toHaveLength(1);
+    expect(useAppStore.getState().items[0].type).toBe('product');
+    expect(useAppStore.getState().items[0].quantity).toBe(3);
+    expect(useAppStore.getState().calculateTotals().productsKopecks).toBe(1200000);
+    expect(useAppStore.getState().calculateTotals().servicesKopecks).toBe(0);
+    useAppStore.setState({ items: [] });
+  });
 });
 
 describe('settings and navigation state', () => {
