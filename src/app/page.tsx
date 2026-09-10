@@ -69,7 +69,7 @@ export default function HomePage() {
 
   return <div className="min-h-screen flex flex-col bg-background">
     <Header />
-    <main className="flex-1 flex flex-col mx-auto w-full max-w-5xl pb-32 sm:pb-0">{content}</main>
+    <main className="flex-1 flex flex-col mx-auto w-full max-w-6xl lg:pl-64 pb-32 sm:pb-0">{content}</main>
     <AddItemModal />
     <InstallBanner onInstall={pwa.install} canInstall={pwa.canInstall} isInstalled={pwa.isInstalled} />
     <IOSInstallBanner isStandalone={pwa.isStandalone} isInstalled={pwa.isInstalled} />
