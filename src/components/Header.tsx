@@ -58,7 +58,7 @@ export const Header = memo(function Header() {
       </nav>
       <div className="mt-auto p-3 border-t border-border">
         <button type="button" onClick={() => setTab('invoice')} className="w-full rounded-xl border border-border bg-background px-3 py-3 text-left hover:border-primary focus-visible:ring-2 focus-visible:ring-ring">
-          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Итого</div>
+          <div className="text-[10px] font-bold uppercase tracking-widest text-muted-foreground">Текущая смета</div>
           <div className="mt-1 text-lg font-black text-primary tabular-nums">{total}</div>
           <div className="mt-1 text-xs text-muted-foreground">{count} {count === 1 ? 'позиция' : count < 5 ? 'позиции' : 'позиций'}</div>
         </button>
